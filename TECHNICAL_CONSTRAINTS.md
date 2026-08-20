@@ -152,6 +152,9 @@ will define the architecture and implementation details within these limits.
 - Player search starts after the player types at least three characters and
   returns no more than 20 results at a time. This keeps search responsive on
   the laptop host while still making public names straightforward to find.
+- After each change to the search text, the app waits 300 milliseconds before
+  sending the search request. This feels immediate to the player while avoiding
+  a separate request for every keystroke.
 - GraphQL and persistent real-time socket connections are not part of the
   initial API design.
 - The API validates all external request input with Zod schemas. Business-rule
