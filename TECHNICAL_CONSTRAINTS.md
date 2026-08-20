@@ -154,11 +154,12 @@ will define the architecture and implementation details within these limits.
 ## Approved linked-match request expiry
 
 - An unanswered linked-match confirmation request expires automatically after
-  30 days. It never affects either player's statistics, public profile, or
-  app-wide statistics. The logger can create a new request later if needed.
+  30 days and is then deleted. It never affects either player's statistics,
+  public profile, or app-wide statistics. The logger can create a new request
+  later if needed.
 - An unanswered proposal to edit or delete a confirmed linked match also
-  expires after 30 days. The original confirmed match remains unchanged, and
-  either player can make a new proposal later.
+  expires after 30 days and is then deleted. The original confirmed match
+  remains unchanged, and either player can make a new proposal later.
 
 ## Approved Milestone 2 API style
 
