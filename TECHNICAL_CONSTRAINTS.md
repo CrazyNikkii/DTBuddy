@@ -65,6 +65,10 @@ will define the architecture and implementation details within these limits.
   not require a restart. It never restarts itself automatically; reboots stay
   under the product owner's control so the app is not unexpectedly taken
   offline.
+- The DTBuddy API and Cloudflare Tunnel run as managed system services. If
+  either stops unexpectedly, the laptop automatically attempts to start it
+  again. This does not reboot the laptop and adds virtually no ongoing resource
+  use.
 - A simple monthly maintenance checklist will check and apply necessary
   Debian, Node.js, PostgreSQL, and Cloudflare Tunnel updates.
 - Before public launch, consider alerting the product owner through the
