@@ -62,8 +62,10 @@ will define the architecture and implementation details within these limits.
   launch.
 - Backup files are encrypted so a lost or stolen backup drive cannot be read
   without its recovery password.
-- Public-launch reliability and data-loss targets are deferred for later
-  decision.
+- The laptop may host the public launch only after a successful 30-day
+  readiness trial. During that trial, the service remains available except for
+  planned downtime, daily backups succeed, and a backup restore succeeds. If
+  it does not meet this check, choose different hosting before public release.
 
 ## Operations and maintenance
 
