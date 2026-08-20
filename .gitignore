@@ -1,0 +1,3 @@
+# Spec Kit machine-local state. Shared templates, rules, and skills remain tracked.
+.specify/feature.json
+.specify/extensions/*/local-config.yml
