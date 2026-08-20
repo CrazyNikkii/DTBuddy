@@ -217,7 +217,3 @@ app, no opponent identity is recorded.
 
 When both players use the app, one player can log and link the match, then ask
 the opponent to confirm it. See the linked-match workflow above.
-
-## Major open questions
-
-- What belongs in the first usable version?
