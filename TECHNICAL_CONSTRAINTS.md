@@ -89,6 +89,16 @@ will define the architecture and implementation details within these limits.
 - Data in private app storage is local to the device and can be lost if the
   app is uninstalled, the device is lost, or its app data is cleared.
 
+## Approved Android application structure
+
+- Compose screens display the user interface and send user actions only.
+- ViewModels hold screen state and coordinate actions such as saving, editing,
+  and deleting matches.
+- Repositories are the data boundary. They access Room in Milestone 1 and can
+  later coordinate local data with the DTBuddy API in Milestone 2.
+- The project does not add further architectural layers unless a concrete
+  future need justifies them.
+
 ## Milestone 1-to-2 test-data transition
 
 - Milestone 1 data is disposable development and solo-test data. It is not
