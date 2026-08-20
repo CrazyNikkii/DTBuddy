@@ -234,6 +234,9 @@ will define the architecture and implementation details within these limits.
   only the basic identity information needed for account creation.
 - The account link uses Google's verified stable subject identifier rather
   than the user's email address.
+- DTBuddy does not store or use a player's Google email address. If an email
+  claim is present in a Google ID token during sign-in, it is discarded after
+  token verification and is never logged.
 - This direct implementation uses no paid Google authentication service and
   does not require the product owner to operate as a registered company.
 
