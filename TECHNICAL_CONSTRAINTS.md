@@ -162,6 +162,11 @@ will define the architecture and implementation details within these limits.
 - The API can revoke a session immediately when the player signs out or their
   account is deleted. Session records are small, indexed database records and
   are appropriate for the limited laptop host during the friends beta.
+- Sessions do not expire merely because the player has not used the app for a
+  period of time. They stay active until the player signs out, deletes their
+  account, or DTBuddy revokes the session for a clear security reason. The app
+  stores board-game results rather than sensitive private content, so avoiding
+  routine sign-in prompts takes priority over an inactivity timeout.
 
 ## Approved PostgreSQL schema changes
 
