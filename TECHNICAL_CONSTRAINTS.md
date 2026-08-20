@@ -146,6 +146,16 @@ will define the architecture and implementation details within these limits.
 - This direct implementation uses no paid Google authentication service and
   does not require the product owner to operate as a registered company.
 
+## Approved account-session implementation
+
+- After Google identity verification, the DTBuddy API creates a server-managed
+  account session in PostgreSQL and returns a random session token to the app.
+- The Android app stores the token using Android secure credential storage and
+  sends it with authenticated API requests.
+- The API can revoke a session immediately when the player signs out or their
+  account is deleted. Session records are small, indexed database records and
+  are appropriate for the limited laptop host during the friends beta.
+
 ## Approved PostgreSQL schema changes
 
 - Every PostgreSQL schema change is a versioned SQL migration file committed to
