@@ -228,6 +228,13 @@ will define the architecture and implementation details within these limits.
   stores board-game results rather than sensitive private content, so avoiding
   routine sign-in prompts takes priority over an inactivity timeout.
 
+## Approved account-deletion confirmation
+
+- Account deletion requires the player to type `DELETE` as an explicit
+  confirmation. Once confirmed, DTBuddy immediately revokes every active
+  session and removes the account's identifiable data and match records, as
+  defined in the product requirements.
+
 ## Approved PostgreSQL schema changes
 
 - The Node.js API accesses PostgreSQL through the lightweight `pg`
