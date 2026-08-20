@@ -54,8 +54,9 @@ will define the architecture and implementation details within these limits.
 
 - During the Milestone 2 friends-only private beta, occasional laptop, power,
   internet, or database outages and possible data loss are acceptable.
-- Before public launch, add automated PostgreSQL backups to an external HDD or
-  other separate storage, and test restoring a backup.
+- Before public launch, create an automated PostgreSQL backup once each day to
+  an external HDD or other storage separate from the laptop, and test restoring
+  a backup.
 - Public-launch reliability and data-loss targets are deferred for later
   decision.
 
