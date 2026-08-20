@@ -87,20 +87,14 @@ will define the architecture and implementation details within these limits.
   favourite-hero selection and order. It is the source for Milestone 1
   history and statistics while offline.
 - Data in private app storage is local to the device and can be lost if the
-  app is uninstalled, the device is lost, or its app data is cleared before
-  the Milestone 2 account import.
+  app is uninstalled, the device is lost, or its app data is cleared.
 
-## Approved Milestone 1-to-2 account import
+## Milestone 1-to-2 test-data transition
 
-- After a player first signs in with Google, the app offers a one-time,
-  previewed import of the device-local Milestone 1 profile. The player can
-  choose to import then or defer the decision.
-- Before importing, the app shows the local data that will be transferred,
-  including the match count, favourite heroes, and private-note count.
-- The import preserves the local data until the API confirms it completed.
-  If it fails, the player can retry safely without creating duplicate records.
-- Imported matches become unlinked matches owned by the new account, and
-  imported notes remain private, as defined in the product requirements.
+- Milestone 1 data is disposable development and solo-test data. It is not
+  imported into Milestone 2 accounts.
+- Milestone 2 Google accounts begin with empty personal data. Real match data
+  starts during the friends-only private beta.
 
 ## Deferred technical decisions
 

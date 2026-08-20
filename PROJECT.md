@@ -83,9 +83,6 @@ release does not change this roster without an explicit product decision.
 ### Milestone 2: invited internal-test scope
 
 - Google sign-in and unique public display-name setup.
-- On first Google sign-in, offer a one-time import of the device-local
-  Milestone 1 profile. Imported matches become unlinked matches owned by the
-  new account; imported notes remain private.
 - Public-player profile browsing.
 - Linked-opponent search and linked-match confirmation.
 - The Requests area, including match confirmations and linked-match edit or
