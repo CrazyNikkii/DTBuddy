@@ -180,6 +180,10 @@ will define the architecture and implementation details within these limits.
   can claim `CrazyNikki` or ` crazynikki `.
 - The player keeps their preferred capitalization for public display. The
   uniqueness rule only prevents confusingly identical names.
+- When a player changes their display name, the previous name remains
+  unavailable for 30 days before another account can claim it. This prevents
+  immediate confusion or impersonation while still allowing unused names to be
+  reused later.
 
 ## Approved account-session implementation
 
