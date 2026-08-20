@@ -158,6 +158,10 @@ will define the architecture and implementation details within these limits.
 
 ## Approved PostgreSQL schema changes
 
+- The Node.js API accesses PostgreSQL through the lightweight `pg`
+  (node-postgres) library.
+- It uses a deliberately small, capped connection pool, initially limited to
+  five connections, to keep resource use predictable on the beta laptop host.
 - Every PostgreSQL schema change is a versioned SQL migration file committed to
   Git.
 - Migrations are reviewed and applied explicitly as part of deployment, after
