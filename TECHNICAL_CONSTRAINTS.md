@@ -97,6 +97,10 @@ will define the architecture and implementation details within these limits.
   or a missed daily backup. The DTBuddy and Discord-bot projects remain
   separate: any later integration is limited to a small one-way status signal
   and does not require combining their project folders.
+- If a security concern involves Google identity details, email data, sign-in,
+  sessions, or account access, take the app offline while it is investigated
+  and fixed. For an issue limited to non-sensitive game statistics, keep the
+  app available while correcting the affected feature or data.
 
 ## Approved Android application technology
 
