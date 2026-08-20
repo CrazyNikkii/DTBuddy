@@ -98,6 +98,10 @@ will define the architecture and implementation details within these limits.
   and deleting matches.
 - Repositories are the data boundary. They access Room in Milestone 1 and can
   later coordinate local data with the DTBuddy API in Milestone 2.
+- Milestone 1 uses a small manual application container to create and share
+  common app services such as repositories and the Room database. Dependency
+  injection frameworks such as Hilt are deferred unless the setup becomes
+  repetitive enough to justify them.
 - The project does not add further architectural layers unless a concrete
   future need justifies them.
 
