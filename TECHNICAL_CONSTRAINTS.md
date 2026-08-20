@@ -184,6 +184,19 @@ will define the architecture and implementation details within these limits.
   player. This is accurate, lightweight, and sufficient for the small beta
   group; reassess it before public launch if usage grows.
 
+## Approved statistics calculation integrity
+
+- Overall, hero, matchup, turn-order, and player-versus-player statistics are
+  overlapping views of the same underlying matches. A match contributes once to
+  each relevant view, but a broader total is never calculated by adding values
+  from narrower views. For example, a player-versus-player Deadpool-versus-Loki
+  result is already part of the global Deadpool-versus-Loki result and must not
+  be added to it again.
+- Statistics calculations and their automated checks use the underlying match
+  contribution for the view being shown, rather than summing other displayed
+  statistic rows. This rule also applies to anonymous aggregate contributions
+  preserved after account deletion.
+
 ## Approved Google sign-in implementation
 
 - The Android app uses Android Credential Manager for the approved
