@@ -7,8 +7,8 @@ statistics based on those games.
 
 Android is the initial target.
 
-This is still in product discovery. Nothing here should be treated as a
-complete specification yet.
+This is a working product brief. Confirmed sections guide implementation;
+items not marked confirmed remain open for product discovery and may change.
 
 ## Confirmed delivery milestones
 
@@ -29,6 +29,9 @@ complete specification yet.
 
 - Log completed, unlinked 1v1 matches with date played, both heroes, winner,
   and first player.
+- Use one device-local owner profile. It requires no sign-in, has no public
+  identity, and keeps its matches and statistics on that device. Private notes
+  are added in the later Milestone 1 increment defined below.
 - View match history and overall, per-hero, per-matchup, and first-player /
   second-player statistics.
 - Use the same main app information architecture planned for public launch. The
@@ -36,8 +39,7 @@ complete specification yet.
   match action. During the solo test, it clearly indicates that community
   statistics are not yet available; the personal view remains local-only.
 - Edit and delete logged matches.
-- Support every official playable PvP hero from the start, including base-set,
-  Marvel, X-Men, and official promo or standalone heroes.
+- Support the frozen 45-hero PvP roster defined below from the start.
 - Exclude Dice Throne Adventures enemies, bosses, and mission-only content.
 - Treat each hero as one canonical entry for the initial release. Exact
   printing/version selection and version-specific statistics are deferred
@@ -45,25 +47,50 @@ complete specification yet.
 - Match logging uses a short guided flow: logging player's hero, opponent's
   hero, result and first player, then date and review/save. The player can go
   back to correct earlier selections.
-- Before favourite-hero selection is implemented, hero selection offers browse
-  and search. Once implemented, it also offers the player's up-to-three
-  favourites alongside browse and search.
+- The initial core build's hero selection offers browse and search.
 - The browse view groups heroes by release family: Dice Throne, Marvel, X-Men,
   and standalone or promo heroes. Search covers the full roster.
-- This milestone has no accounts, opponent identities, notes, requests,
+- The initial core build has no accounts, opponent identities, notes, requests,
   community statistics, or public profiles.
-- After the initial core solo build is validated, add optional private notes to
-  matches during the solo-test phase, before milestone 2 begins. Notes are not
-  required for the first solo-test build.
+- After the initial core solo build is validated, the later Milestone 1
+  solo-test increment adds optional private match notes and favourite-hero
+  selection. The player can select and order up to three favourites; hero
+  selection then shows those favourites alongside browse and search. Both are
+  required before Milestone 1 is complete, but neither is required for the
+  initial core build.
+
+### Milestone 1 hero roster
+
+The project list below is the authoritative Milestone 1 roster, frozen as of
+2026-08-20. It was reconciled using the [Dice Throne Wiki hero list](https://dice-throne.fandom.com/wiki/Heroes)
+and the official Dice Throne site. Each name is one canonical hero entry;
+alternate printings and balance versions are not separate entries. A later hero
+release does not change this roster without an explicit product decision.
+
+- **Season 1:** Barbarian, Moon Elf, Pyromancer, Shadow Thief, Monk, Paladin,
+  Ninja, Treant.
+- **Season 2:** Gunslinger, Samurai, Huntress, Tactician, Cursed Pirate,
+  Artificer, Seraph, Vampire Lord.
+- **Marvel:** Black Panther, Black Widow, Captain Marvel, Doctor Strange,
+  Scarlet Witch, Loki, Miles Morales Spider-Man, Thor.
+- **X-Men:** Cyclops, Gambit, Iceman, Jean Grey, Psylocke, Rogue, Storm,
+  Wolverine.
+- **Santa vs Krampus:** Santa, Krampus.
+- **Standalone:** Deadpool, Alchemist, Mystic Brawler.
+- **Outcasts:** Headless Horseman, Necromancer, Pale Lady, Raveness.
+- **Vanguard:** Forgemaster, Druid, Duelist, Sun Elf.
 
 ### Milestone 2: invited internal-test scope
 
 - Google sign-in and unique public display-name setup.
+- On first Google sign-in, offer a one-time import of the device-local
+  Milestone 1 profile. Imported matches become unlinked matches owned by the
+  new account; imported notes remain private.
 - Public-player profile browsing.
 - Linked-opponent search and linked-match confirmation.
 - The Requests area, including match confirmations and linked-match edit or
   deletion proposals.
-- App-wide community statistics based on confirmed matches.
+- App-wide community statistics based on eligible completed matches.
 - This milestone is tested with an invited group of friends before public
   launch.
 
@@ -79,15 +106,17 @@ complete specification yet.
 - The navigation structure is established in milestone 1 and expanded as the
   related features become available, avoiding a later UI/UX redesign.
 
-## Things I currently like
+## Original product ideas
+
+Later confirmed sections override these early notes.
 
 - Log completed matches
 - Track personal win/loss statistics
 - Hero-specific statistics
 - Matchup-specific statistics
-- Potential community statistics
-- Potential registered users / opponents
-- The app going to google appstore
+- Community statistics
+- Registered users / opponents
+- The app going to Google Play
 
 ## Confirmed non-goal
 
@@ -100,15 +129,17 @@ complete specification yet.
 
 ## Confirmed account and community-statistics approach
 
-- The app opens to a sign-in screen, with an **Explore as guest** option.
+- At public launch, the app opens to a sign-in screen, with an **Explore as
+  guest** option.
 - Guests can browse all-time, app-wide hero statistics only. They cannot log
   matches or access personal features.
-- Personal match logging and personal statistics require an account.
+- At public launch, personal match logging and personal statistics require an
+  account.
 - At launch, accounts use **Continue with Google** only.
 - Each account has a unique public display name, chosen by the player. It is
   the initial way to find and link an opponent's account.
 - Players can change their display name.
-- Every standard completed match logged in the app contributes to app-wide
+- Every eligible completed match logged in the app contributes to app-wide
   statistics automatically.
 - The initial version has no special-rules or exclusion-from-community-stats
   option.
@@ -121,7 +152,7 @@ complete specification yet.
 
 - Player profiles are public. A profile shows a player's games played, overall
   win rate, selected favourite hero, owned heroes, hero statistics, and
-  confirmed match history.
+  eligible completed-match history.
 - Google identity and private match notes are never shown publicly.
 - The profile overview links to separate **Heroes** and **Match history**
   pages.
@@ -136,15 +167,18 @@ complete specification yet.
 - A player selects and orders up to three favourite heroes. It is not inferred
   from games played or win rate. Their first-ranked favourite is shown on their
   public profile.
-- Match history shows completed matches in date order, with heroes, result,
-  and a linked opponent's display name when one exists. Opening a match shows
-  its detailed statistics.
+- Match history shows eligible completed matches newest played date first,
+  with creation time descending as the tie-breaker. It shows the heroes,
+  result, and a linked opponent's display name when one exists. An unlinked
+  opponent is displayed as **Unknown**. Opening a match shows its detailed
+  statistics.
 - A match detail can show each player's record with their selected hero,
   each player's record against the opposing hero, their specific head-to-head
   hero matchup, and the global hero matchup record.
 - Global statistics follow the same browse-and-drill-down pattern as player
   statistics.
-- Displayed statistics include the confirmed match currently being viewed.
+- Displayed statistics include the eligible completed match currently being
+  viewed.
 
 ## Confirmed initial statistics focus
 
@@ -153,7 +187,7 @@ complete specification yet.
   position.
 - Linked players can also view their confirmed head-to-head record.
 - App-wide statistics provide the same hero, matchup, and turn-order views
-  using confirmed matches across the app.
+  using eligible completed matches across the app.
 - Profile and global overviews highlight the overall record, favourite hero,
   and most-played heroes. Hero details provide the hero record, turn-order
   splits, and a matchup table.
@@ -163,15 +197,18 @@ complete specification yet.
   opponent analysis are deferred beyond the initial launch.
 - When global hero win rates are ranked, sorting uses a transparent Bayesian
   weighted win rate rather than raw win rate or a minimum-games cutoff. The
-  displayed result always includes the actual win rate and games played, and
-  explains that the ranking is adjusted for sample size.
+  adjusted rate is `(wins + 5) / (games played + 10)`: a neutral 50% prior with
+  the weight of 10 games. The displayed result always includes the actual win
+  rate and games played, and explains that the ranking is adjusted for sample
+  size.
 - Global hero lists default to adjusted win-rate order and can also be sorted
   by raw win rate, games played, or hero name.
 
 ## Confirmed linked-match workflow
 
-- An unlinked match counts immediately in the logging player's statistics and
-  app-wide statistics.
+- An unlinked match is eligible immediately: it counts in the logging player's
+  statistics, appears in their public history with the opponent shown as
+  **Unknown**, and contributes to app-wide statistics.
 - A linked match is a pending proposal until the opponent confirms it. Until
   then it is visible only to the logger and does not affect either player's
   statistics, public profile, or app-wide statistics.
