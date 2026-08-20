@@ -207,8 +207,6 @@ will define the architecture and implementation details within these limits.
 
 ## Deferred technical decisions
 
-- Backend framework and API design.
-- Google sign-in implementation and credential management.
 - Exact backup schedule, retention, encryption, and restore objective.
 - Public-launch hosting decision and migration plan.
 - Monitoring, alerting, privacy-policy hosting, and incident-response details.
