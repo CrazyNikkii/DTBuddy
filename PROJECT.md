@@ -29,6 +29,18 @@ complete specification yet.
 - Completed matches are logged as 1v1 only. Multiplayer and team formats
   are deferred.
 
+## Confirmed account and community-statistics approach
+
+- The app opens to a sign-in screen, with an **Explore as guest** option.
+- Guests can browse all-time, app-wide hero statistics only. They cannot log
+  matches or access personal features.
+- Personal match logging and personal statistics require an account.
+- At launch, accounts use **Continue with Google** only.
+- Every standard completed match logged in the app contributes to app-wide
+  statistics automatically.
+- The initial version has no special-rules or exclusion-from-community-stats
+  option.
+
 ## Confirmed match-log information
 
 Each completed match records:
@@ -53,7 +65,6 @@ The detailed confirmation and dispute behavior remains undecided.
 
 ## Major open questions
 
-- Do users need accounts?
 - Do we actually need a friends system?
 - What should other users be able to see?
 - What statistics are actually useful?
