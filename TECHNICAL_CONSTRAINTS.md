@@ -169,11 +169,16 @@ will define the architecture and implementation details within these limits.
 - Migrations are reviewed and applied explicitly as part of deployment, after
   an appropriate database backup. The API does not automatically alter the
   database schema on startup.
+- A small project-owned Node.js migration runner applies the versioned SQL
+  files and records which versions have been applied in PostgreSQL. It runs
+  only during a deliberate deployment; it is not a continuously running
+  service. This avoids extra memory and background-process overhead on the
+  limited Milestone 2 laptop host while keeping database updates traceable and
+  repeatable.
 
 ## Deferred technical decisions
 
 - Backend framework and API design.
-- Database schema and migration tooling.
 - Google sign-in implementation and credential management.
 - Exact backup schedule, retention, encryption, and restore objective.
 - Public-launch hosting decision and migration plan.
