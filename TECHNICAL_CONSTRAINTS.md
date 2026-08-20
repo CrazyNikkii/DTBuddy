@@ -146,6 +146,9 @@ will define the architecture and implementation details within these limits.
   using JSON request and response bodies.
 - The API uses REST-style endpoints for resources and actions such as matches,
   player profiles, statistics, and linked-match requests.
+- Match-history requests return 25 matches at a time. The app requests the
+  next group only when the player scrolls for more history, keeping each
+  request light for both the Android device and the laptop host.
 - GraphQL and persistent real-time socket connections are not part of the
   initial API design.
 - The API validates all external request input with Zod schemas. Business-rule
