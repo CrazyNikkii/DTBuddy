@@ -131,9 +131,10 @@ will define the architecture and implementation details within these limits.
   or failed sync state.
 - If different devices change the same match before syncing, the version saved
   most recently becomes the active version automatically. The previous version
-  is retained as a record. The app does not interrupt the player to choose
-  between versions; this keeps the private beta simple and has only a small
-  storage and processing cost on the laptop host.
+  is retained as a record for 90 days, then removed automatically. The app
+  does not interrupt the player to choose between versions; this keeps the
+  private beta simple and has only a small storage and processing cost on the
+  laptop host.
 - Shared or live features, including player search, linked-match requests, and
   current community statistics, require a connection to the API and may be
   unavailable or stale while offline.
