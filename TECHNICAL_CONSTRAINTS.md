@@ -278,6 +278,10 @@ will define the architecture and implementation details within these limits.
 - Before public launch, the required deletion route outside the Android app is
   provided at `dtbuddy.com/delete`. The player signs in there with the same
   Google account and completes the same `DELETE` confirmation.
+- DTBuddy's public privacy-policy and deletion pages are hosted as a separate
+  small static-site project on Cloudflare Pages. The deletion page's secure
+  action still contacts the DTBuddy API; neither this site nor the Discord bot
+  is combined with the Android or API project.
 
 ## Approved PostgreSQL schema changes
 
