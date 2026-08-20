@@ -60,6 +60,8 @@ will define the architecture and implementation details within these limits.
 - Keep the latest 30 daily backups and remove older daily copies automatically.
 - Test restoring a backup once every three months before and after public
   launch.
+- Backup files are encrypted so a lost or stolen backup drive cannot be read
+  without its recovery password.
 - Public-launch reliability and data-loss targets are deferred for later
   decision.
 
