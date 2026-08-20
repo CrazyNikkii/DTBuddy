@@ -72,6 +72,9 @@ will define the architecture and implementation details within these limits.
 
 - The Android app is written in Kotlin.
 - Its user interface uses Jetpack Compose, Android's modern native UI toolkit.
+- The minimum supported Android version is Android 8.0 (API level 26).
+- At release time, the app targets the Android API level then required by
+  Google Play; this is independent of the minimum supported version.
 - The project is Android-first. A future iOS app remains possible; this choice
   does not commit the project to iOS work or prevent a later Kotlin
   Multiplatform or native-iOS approach.
