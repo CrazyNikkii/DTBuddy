@@ -31,7 +31,25 @@ complete specification yet.
   and first player.
 - View match history and overall, per-hero, per-matchup, and first-player /
   second-player statistics.
+- Use the same main app information architecture planned for public launch. The
+  home screen is the global-statistics discovery view and has a prominent Log
+  match action. During the solo test, it clearly indicates that community
+  statistics are not yet available; the personal view remains local-only.
 - Edit and delete logged matches.
+- Support every official playable PvP hero from the start, including base-set,
+  Marvel, X-Men, and official promo or standalone heroes.
+- Exclude Dice Throne Adventures enemies, bosses, and mission-only content.
+- Treat each hero as one canonical entry for the initial release. Exact
+  printing/version selection and version-specific statistics are deferred
+  until after public launch.
+- Match logging uses a short guided flow: logging player's hero, opponent's
+  hero, result and first player, then date and review/save. The player can go
+  back to correct earlier selections.
+- Before favourite-hero selection is implemented, hero selection offers browse
+  and search. Once implemented, it also offers the player's up-to-three
+  favourites alongside browse and search.
+- The browse view groups heroes by release family: Dice Throne, Marvel, X-Men,
+  and standalone or promo heroes. Search covers the full roster.
 - This milestone has no accounts, opponent identities, notes, requests,
   community statistics, or public profiles.
 - After the initial core solo build is validated, add optional private notes to
@@ -48,6 +66,18 @@ complete specification yet.
 - App-wide community statistics based on confirmed matches.
 - This milestone is tested with an invited group of friends before public
   launch.
+
+## Confirmed main navigation
+
+- Home is the global hero-statistics discovery view.
+- My profile contains the player's overview and links to their Heroes and
+  Match history pages.
+- Player search is added with multi-user features so players can find and open
+  public profiles.
+- Requests is added with linked matches and shows pending confirmations and
+  change requests.
+- The navigation structure is established in milestone 1 and expanded as the
+  related features become available, avoiding a later UI/UX redesign.
 
 ## Things I currently like
 
@@ -90,8 +120,8 @@ complete specification yet.
 ## Confirmed profiles and statistics views
 
 - Player profiles are public. A profile shows a player's games played, overall
-  win rate, favourite hero, owned heroes, hero statistics, and confirmed match
-  history.
+  win rate, selected favourite hero, owned heroes, hero statistics, and
+  confirmed match history.
 - Google identity and private match notes are never shown publicly.
 - The profile overview links to separate **Heroes** and **Match history**
   pages.
@@ -101,6 +131,11 @@ complete specification yet.
   first-player / second-player splits.
 - Owned heroes are a profile collection only; they never restrict which hero
   a player can use when logging a match.
+- Players manually add, remove, and change the heroes in their owned-heroes
+  collection. It has no limit and is separate from their favourite heroes.
+- A player selects and orders up to three favourite heroes. It is not inferred
+  from games played or win rate. Their first-ranked favourite is shown on their
+  public profile.
 - Match history shows completed matches in date order, with heroes, result,
   and a linked opponent's display name when one exists. Opening a match shows
   its detailed statistics.
@@ -124,8 +159,14 @@ complete specification yet.
   splits, and a matchup table.
 - Match details retain the selected match's contextual personal, head-to-head,
   and global matchup records.
-- ELO, rankings / leaderboards, win streaks, deep charts, and best/worst
+- ELO, player rankings / leaderboards, win streaks, deep charts, and best/worst
   opponent analysis are deferred beyond the initial launch.
+- When global hero win rates are ranked, sorting uses a transparent Bayesian
+  weighted win rate rather than raw win rate or a minimum-games cutoff. The
+  displayed result always includes the actual win rate and games played, and
+  explains that the ranking is adjusted for sample size.
+- Global hero lists default to adjusted win-rate order and can also be sorted
+  by raw win rate, games played, or hero name.
 
 ## Confirmed linked-match workflow
 
