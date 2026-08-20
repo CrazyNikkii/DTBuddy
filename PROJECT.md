@@ -10,6 +10,45 @@ Android is the initial target.
 This is still in product discovery. Nothing here should be treated as a
 complete specification yet.
 
+## Confirmed delivery milestones
+
+- Development progresses through three milestones:
+  1. A solo test build used by the product owner. It validates personal match
+     logging, match history, and personal statistics before any social or
+     public features are added.
+  2. An invited internal / friends-only test build. It introduces multiple
+     accounts and validates linked matches, requests, shared statistics, and
+     the multi-user experience with a small trusted group.
+  3. A public Google Play launch build. It is the complete, working first
+     version for guests and registered players, rather than an early test
+     release.
+- Each earlier milestone can be deliberately narrow; public-launch
+  requirements are completed for the public launch build.
+
+### Milestone 1: solo test scope
+
+- Log completed, unlinked 1v1 matches with date played, both heroes, winner,
+  and first player.
+- View match history and overall, per-hero, per-matchup, and first-player /
+  second-player statistics.
+- Edit and delete logged matches.
+- This milestone has no accounts, opponent identities, notes, requests,
+  community statistics, or public profiles.
+- After the initial core solo build is validated, add optional private notes to
+  matches during the solo-test phase, before milestone 2 begins. Notes are not
+  required for the first solo-test build.
+
+### Milestone 2: invited internal-test scope
+
+- Google sign-in and unique public display-name setup.
+- Public-player profile browsing.
+- Linked-opponent search and linked-match confirmation.
+- The Requests area, including match confirmations and linked-match edit or
+  deletion proposals.
+- App-wide community statistics based on confirmed matches.
+- This milestone is tested with an invited group of friends before public
+  launch.
+
 ## Things I currently like
 
 - Log completed matches
@@ -72,6 +111,22 @@ complete specification yet.
   statistics.
 - Displayed statistics include the confirmed match currently being viewed.
 
+## Confirmed initial statistics focus
+
+- The initial statistics set focuses on games played, wins, losses, and win
+  rate overall, per hero, per hero matchup, and by first-player / second-player
+  position.
+- Linked players can also view their confirmed head-to-head record.
+- App-wide statistics provide the same hero, matchup, and turn-order views
+  using confirmed matches across the app.
+- Profile and global overviews highlight the overall record, favourite hero,
+  and most-played heroes. Hero details provide the hero record, turn-order
+  splits, and a matchup table.
+- Match details retain the selected match's contextual personal, head-to-head,
+  and global matchup records.
+- ELO, rankings / leaderboards, win streaks, deep charts, and best/worst
+  opponent analysis are deferred beyond the initial launch.
+
 ## Confirmed linked-match workflow
 
 - An unlinked match counts immediately in the logging player's statistics and
@@ -91,6 +146,15 @@ complete specification yet.
   confirmation.
 - The initial app includes an in-app **Requests** area with a badge/count for
   pending confirmations and change requests. Push notifications are deferred.
+
+## Confirmed friends-system approach
+
+- A friends list is a planned future feature, but it is not part of the first
+  launch.
+- Public profiles and display-name search provide the initial way for players
+  to find and link opponents.
+- Revisit the friends-system design after launch, informed by adoption and
+  recurring-opponent usage.
 
 ## Confirmed match-log information
 
@@ -115,6 +179,4 @@ the opponent to confirm it. See the linked-match workflow above.
 
 ## Major open questions
 
-- Do we actually need a friends system?
-- What statistics are actually useful?
 - What belongs in the first usable version?
