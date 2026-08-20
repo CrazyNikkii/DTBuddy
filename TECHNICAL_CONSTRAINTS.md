@@ -92,6 +92,8 @@ will define the architecture and implementation details within these limits.
 ## Approved Android application structure
 
 - Compose screens display the user interface and send user actions only.
+- Navigation Compose manages movement between screens and Android back
+  navigation.
 - ViewModels hold screen state and coordinate actions such as saving, editing,
   and deleting matches.
 - Repositories are the data boundary. They access Room in Milestone 1 and can
