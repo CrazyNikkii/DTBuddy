@@ -69,6 +69,9 @@ will define the architecture and implementation details within these limits.
 - An unexpected outage lasting under one hour is recorded and reviewed but does
   not automatically fail the readiness trial. An unexpected outage lasting one
   hour or more fails it.
+- At public launch, a worst-case loss of up to 24 hours of the newest match
+  data is acceptable if the laptop or its current database fails. This matches
+  the once-daily backup schedule.
 
 ## Operations and maintenance
 
