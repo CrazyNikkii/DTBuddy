@@ -145,6 +145,10 @@ will define the architecture and implementation details within these limits.
   initial API design.
 - The API validates all external request input with Zod schemas. Business-rule
   and permission checks remain server-side even after schema validation.
+- The API includes a lightweight built-in speed limit for online requests.
+  Normal use is unaffected, but excessive repeated requests from the same
+  account or network are temporarily refused. This protects the limited laptop
+  host without introducing another hosted service or ongoing cost.
 
 ## Approved Google sign-in implementation
 
