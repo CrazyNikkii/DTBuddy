@@ -112,6 +112,17 @@ will define the architecture and implementation details within these limits.
 - Milestone 2 Google accounts begin with empty personal data. Real match data
   starts during the friends-only private beta.
 
+## Approved Milestone 2 offline and sync behaviour
+
+- Milestone 2 retains local app data on each device and saves new changes
+  locally before attempting to sync them to the DTBuddy API.
+- Changes made while the device or laptop host is unavailable are queued and
+  retried when connectivity returns. The app clearly indicates pending, synced,
+  or failed sync state.
+- Shared or live features, including player search, linked-match requests, and
+  current community statistics, require a connection to the API and may be
+  unavailable or stale while offline.
+
 ## Deferred technical decisions
 
 - Backend framework and API design.
