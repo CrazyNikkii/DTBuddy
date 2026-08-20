@@ -76,6 +76,29 @@ will define the architecture and implementation details within these limits.
   does not commit the project to iOS work or prevent a later Kotlin
   Multiplatform or native-iOS approach.
 
+## Approved Milestone 1 local data storage
+
+- Milestone 1 stores product data in a Room database backed by SQLite in the
+  Android app's private on-device storage.
+- This database stores the local owner profile, matches, private notes, and
+  favourite-hero selection and order. It is the source for Milestone 1
+  history and statistics while offline.
+- Data in private app storage is local to the device and can be lost if the
+  app is uninstalled, the device is lost, or its app data is cleared before
+  the Milestone 2 account import.
+
+## Approved Milestone 1-to-2 account import
+
+- After a player first signs in with Google, the app offers a one-time,
+  previewed import of the device-local Milestone 1 profile. The player can
+  choose to import then or defer the decision.
+- Before importing, the app shows the local data that will be transferred,
+  including the match count, favourite heroes, and private-note count.
+- The import preserves the local data until the API confirms it completed.
+  If it fails, the player can retry safely without creating duplicate records.
+- Imported matches become unlinked matches owned by the new account, and
+  imported notes remain private, as defined in the product requirements.
+
 ## Deferred technical decisions
 
 - Backend framework and API design.
