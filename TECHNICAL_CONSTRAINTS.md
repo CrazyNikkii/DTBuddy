@@ -133,6 +133,14 @@ will define the architecture and implementation details within these limits.
 - GraphQL and persistent real-time socket connections are not part of the
   initial API design.
 
+## Approved PostgreSQL schema changes
+
+- Every PostgreSQL schema change is a versioned SQL migration file committed to
+  Git.
+- Migrations are reviewed and applied explicitly as part of deployment, after
+  an appropriate database backup. The API does not automatically alter the
+  database schema on startup.
+
 ## Deferred technical decisions
 
 - Backend framework and API design.
