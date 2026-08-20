@@ -119,6 +119,21 @@ Later confirmed sections override these early notes.
 
 - No live-game companion / HP tracker / Dice roller.
 
+## Confirmed intellectual-property and public-release posture
+
+- DTBuddy is an unofficial, fan-made match-tracking application and must state
+  clearly that it is not affiliated with, endorsed by, or sponsored by Dice
+  Throne Inc. or other relevant rights holders.
+- The product name and primary branding do not use the Dice Throne name.
+- The app may use hero names as necessary to identify the heroes that players
+  select and record. It uses original app visuals and must not copy official
+  logos, character artwork, cards, boards, dice, or rules text. Broad visual
+  inspiration must not reproduce recognisable official artwork or branding.
+- Before any Google Play release, the product owner will contact Dice Throne
+  Inc. to request written permission or guidance for the planned public use of
+  relevant names and fan-project presentation. The release decision follows
+  that response.
+
 ## Confirmed initial-launch scope
 
 - Completed matches are logged as 1v1 only. Multiplayer and team formats
