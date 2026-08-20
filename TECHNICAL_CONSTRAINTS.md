@@ -221,6 +221,9 @@ will define the architecture and implementation details within these limits.
   unavailable for 30 days before another account can claim it. This prevents
   immediate confusion or impersonation while still allowing unused names to be
   reused later.
+- Account deletion releases the deleted player's display name immediately. The
+  30-day hold applies only to a name change, so DTBuddy does not retain deleted
+  account data merely to reserve a name.
 - A display name is 3 to 20 characters long and uses only letters, numbers,
   spaces, hyphens, and underscores. Emojis, invisible characters, and other
   unusual symbols are not allowed, keeping names easy to search for and
