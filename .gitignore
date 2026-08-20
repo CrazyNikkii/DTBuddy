@@ -1,3 +1,11 @@
 # Spec Kit machine-local state. Shared templates, rules, and skills remain tracked.
 .specify/feature.json
 .specify/extensions/*/local-config.yml
+
+# Android / Kotlin build output and local IDE configuration
+.gradle/
+build/
+app/build/
+*.iml
+.idea/
+local.properties
