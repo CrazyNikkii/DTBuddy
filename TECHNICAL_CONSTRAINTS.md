@@ -72,6 +72,9 @@ will define the architecture and implementation details within these limits.
 - At public launch, a worst-case loss of up to 24 hours of the newest match
   data is acceptable if the laptop or its current database fails. This matches
   the once-daily backup schedule.
+- After a serious laptop or database failure, aim to restore the app within 48
+  hours. This is a planning target for the solo product owner, not an automatic
+  guarantee or a fixed obligation.
 
 ## Operations and maintenance
 
