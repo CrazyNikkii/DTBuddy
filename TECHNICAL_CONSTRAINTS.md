@@ -125,6 +125,7 @@ will define the architecture and implementation details within these limits.
 
 ## Approved Milestone 2 API style
 
+- The backend uses Node.js, Express 5, and TypeScript.
 - The Android app communicates with the DTBuddy Node.js backend over HTTPS
   using JSON request and response bodies.
 - The API uses REST-style endpoints for resources and actions such as matches,
