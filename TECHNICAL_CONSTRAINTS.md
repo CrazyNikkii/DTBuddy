@@ -66,6 +66,9 @@ will define the architecture and implementation details within these limits.
   readiness trial. During that trial, the service remains available except for
   planned downtime, daily backups succeed, and a backup restore succeeds. If
   it does not meet this check, choose different hosting before public release.
+- An unexpected outage lasting under one hour is recorded and reviewed but does
+  not automatically fail the readiness trial. An unexpected outage lasting one
+  hour or more fails it.
 
 ## Operations and maintenance
 
