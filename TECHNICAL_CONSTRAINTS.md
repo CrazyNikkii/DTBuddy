@@ -153,6 +153,11 @@ will define the architecture and implementation details within these limits.
   Normal use is unaffected, but excessive repeated requests from the same
   account or network are temporarily refused. This protects the limited laptop
   host without introducing another hosted service or ongoing cost.
+- During the friends-only beta, the API calculates statistics from the actual
+  match records when a player opens a statistics view. It does not maintain a
+  separate, constantly updated copy of those figures. This is accurate,
+  lightweight, and sufficient for the small beta group; reassess it before
+  public launch if usage grows.
 
 ## Approved Google sign-in implementation
 
