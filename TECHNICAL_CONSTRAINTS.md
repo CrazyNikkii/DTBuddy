@@ -248,6 +248,9 @@ will define the architecture and implementation details within these limits.
   unavailable for 30 days before another account can claim it. This prevents
   immediate confusion or impersonation while still allowing unused names to be
   reused later.
+- A player may change their display name no more than once every 30 days. This
+  matches the reservation period and prevents repeated name changes from
+  blocking many names.
 - Account deletion releases the deleted player's display name immediately. The
   30-day hold applies only to a name change, so DTBuddy does not retain deleted
   account data merely to reserve a name.
