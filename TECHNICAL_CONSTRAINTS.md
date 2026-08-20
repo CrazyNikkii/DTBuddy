@@ -142,6 +142,12 @@ will define the architecture and implementation details within these limits.
   current community statistics, require a connection to the API and may be
   unavailable or stale while offline.
 
+## Approved linked-match request expiry
+
+- An unanswered linked-match confirmation request expires automatically after
+  30 days. It never affects either player's statistics, public profile, or
+  app-wide statistics. The logger can create a new request later if needed.
+
 ## Approved Milestone 2 API style
 
 - The backend uses Node.js, Express 5, and TypeScript.
