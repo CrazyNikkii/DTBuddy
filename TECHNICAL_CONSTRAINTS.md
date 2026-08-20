@@ -234,6 +234,9 @@ will define the architecture and implementation details within these limits.
   confirmation. Once confirmed, DTBuddy immediately revokes every active
   session and removes the account's identifiable data and match records, as
   defined in the product requirements.
+- Before public launch, the required deletion route outside the Android app is
+  provided at `dtbuddy.com/delete`. The player signs in there with the same
+  Google account and completes the same `DELETE` confirmation.
 
 ## Approved PostgreSQL schema changes
 
