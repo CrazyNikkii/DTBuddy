@@ -126,6 +126,9 @@ will define the architecture and implementation details within these limits.
 
 - Milestone 2 retains local app data on each device and saves new changes
   locally before attempting to sync them to the DTBuddy API.
+- A match's date played is stored as the calendar date selected by the player,
+  without a time of day or time-zone conversion. A match saved as 20 August
+  therefore remains dated 20 August if the player later travels.
 - Changes made while the device or laptop host is unavailable are queued and
   retried when connectivity returns. The app clearly indicates pending, synced,
   or failed sync state.
