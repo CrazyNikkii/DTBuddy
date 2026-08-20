@@ -173,6 +173,14 @@ will define the architecture and implementation details within these limits.
 - This direct implementation uses no paid Google authentication service and
   does not require the product owner to operate as a registered company.
 
+## Approved public display-name handling
+
+- Public display names are unique without regard to capitalization or leading
+  and trailing spaces. For example, once `crazynikki` is claimed, nobody else
+  can claim `CrazyNikki` or ` crazynikki `.
+- The player keeps their preferred capitalization for public display. The
+  uniqueness rule only prevents confusingly identical names.
+
 ## Approved account-session implementation
 
 - After Google identity verification, the DTBuddy API creates a server-managed
