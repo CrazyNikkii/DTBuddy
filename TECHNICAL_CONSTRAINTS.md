@@ -312,6 +312,15 @@ will define the architecture and implementation details within these limits.
   limited Milestone 2 laptop host while keeping database updates traceable and
   repeatable.
 
+## Approved DTBuddy credential storage
+
+- DTBuddy credentials and recovery keys, including database credentials and
+  server secrets, are kept in a dedicated DTBuddy password-manager vault and
+  never committed to Git or stored in project files.
+- The product owner's personal password manager stores only the single unlock
+  password for that DTBuddy vault. Neither password manager stores player
+  fingerprints, match records, or other player data.
+
 ## Deferred technical decisions
 
 - Exact backup schedule, retention, encryption, and restore objective.
