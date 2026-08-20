@@ -237,6 +237,9 @@ will define the architecture and implementation details within these limits.
 - DTBuddy does not store or use a player's Google email address. If an email
   claim is present in a Google ID token during sign-in, it is discarded after
   token verification and is never logged.
+- The API converts Google's verified stable subject identifier into a keyed
+  one-way fingerprint before storing the account link. The raw subject
+  identifier is discarded after verification and is never logged.
 - This direct implementation uses no paid Google authentication service and
   does not require the product owner to operate as a registered company.
 
