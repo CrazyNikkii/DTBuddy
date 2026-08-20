@@ -62,6 +62,8 @@ will define the architecture and implementation details within these limits.
   launch.
 - Backup files are encrypted so a lost or stolen backup drive cannot be read
   without its recovery password.
+- Keep the backup recovery password in the product owner's existing password
+  manager and as a paper copy, never on the laptop or the backup device.
 - The laptop may host the public launch only after a successful 30-day
   readiness trial. During that trial, the service remains available except for
   planned downtime, daily backups succeed, and a backup restore succeeds. If
