@@ -36,10 +36,16 @@ complete specification yet.
   matches or access personal features.
 - Personal match logging and personal statistics require an account.
 - At launch, accounts use **Continue with Google** only.
+- Each account has a unique public display name, chosen by the player. It is
+  the initial way to find and link an opponent's account.
 - Every standard completed match logged in the app contributes to app-wide
   statistics automatically.
 - The initial version has no special-rules or exclusion-from-community-stats
   option.
+- Users can request deletion of their account and associated data. Deleted
+  matches are removed from both personal and app-wide statistics.
+- The release requires a public privacy policy, a Google Play Data Safety
+  declaration, and an accessible account-deletion route outside the app.
 
 ## Confirmed match-log information
 
