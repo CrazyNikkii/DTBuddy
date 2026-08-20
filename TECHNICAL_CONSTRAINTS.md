@@ -61,10 +61,12 @@ will define the architecture and implementation details within these limits.
 
 ## Operations and maintenance
 
-- Routine operating-system security updates should be automated where safe.
+- The laptop automatically installs routine Debian security fixes when they do
+  not require a restart. It never restarts itself automatically; reboots stay
+  under the product owner's control so the app is not unexpectedly taken
+  offline.
 - A simple monthly maintenance checklist will check and apply necessary
   Debian, Node.js, PostgreSQL, and Cloudflare Tunnel updates.
-- Reboots remain under the product owner's control.
 - Before public launch, consider alerting the product owner through the
   existing Discord bot when the host has pending updates or a failed service.
 
