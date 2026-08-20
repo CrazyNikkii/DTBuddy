@@ -132,6 +132,8 @@ will define the architecture and implementation details within these limits.
   player profiles, statistics, and linked-match requests.
 - GraphQL and persistent real-time socket connections are not part of the
   initial API design.
+- The API validates all external request input with Zod schemas. Business-rule
+  and permission checks remain server-side even after schema validation.
 
 ## Approved Google sign-in implementation
 
