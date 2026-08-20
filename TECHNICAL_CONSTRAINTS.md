@@ -71,6 +71,10 @@ will define the architecture and implementation details within these limits.
   use.
 - A simple monthly maintenance checklist will check and apply necessary
   Debian, Node.js, PostgreSQL, and Cloudflare Tunnel updates.
+- The API keeps a small, automatically overwritten technical error log for 30
+  days to help diagnose problems. It records only the time, affected app
+  function, and technical error information; it never records account details,
+  Google identity details, session tokens, private notes, or match contents.
 - Before public launch, consider alerting the product owner through the
   existing Discord bot when the host has pending updates or a failed service.
 
