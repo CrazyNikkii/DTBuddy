@@ -149,6 +149,9 @@ will define the architecture and implementation details within these limits.
 - Match-history requests return 25 matches at a time. The app requests the
   next group only when the player scrolls for more history, keeping each
   request light for both the Android device and the laptop host.
+- Player search starts after the player types at least three characters and
+  returns no more than 20 results at a time. This keeps search responsive on
+  the laptop host while still making public names straightforward to find.
 - GraphQL and persistent real-time socket connections are not part of the
   initial API design.
 - The API validates all external request input with Zod schemas. Business-rule
