@@ -156,7 +156,12 @@ Later confirmed sections override these early notes.
 - The initial version has no special-rules or exclusion-from-community-stats
   option.
 - Users can request deletion of their account and associated data. Deleted
-  matches are removed from both personal and app-wide statistics.
+  accounts, profiles, sessions, notes, and match records are removed from the
+  app. Before removal, each deleted match's anonymous statistical contribution
+  remains in app-wide totals, with no retained player identity, account link,
+  individual match record, or match date. App-wide statistics therefore reflect
+  every eligible match ever logged while personal statistics no longer include
+  deleted matches.
 - The release requires a public privacy policy, a Google Play Data Safety
   declaration, and an accessible account-deletion route outside the app.
 
