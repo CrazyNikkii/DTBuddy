@@ -81,8 +81,11 @@ will define the architecture and implementation details within these limits.
   days to help diagnose problems. It records only the time, affected app
   function, and technical error information; it never records account details,
   Google identity details, session tokens, private notes, or match contents.
-- Before public launch, consider alerting the product owner through the
-  existing Discord bot when the host has pending updates or a failed service.
+- Before public launch, revisit alerting the product owner through the existing
+  Discord bot when the host has pending updates, a repeatedly failing service,
+  or a missed daily backup. The DTBuddy and Discord-bot projects remain
+  separate: any later integration is limited to a small one-way status signal
+  and does not require combining their project folders.
 
 ## Approved Android application technology
 
