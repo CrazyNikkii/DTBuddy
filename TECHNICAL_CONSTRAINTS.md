@@ -123,6 +123,15 @@ will define the architecture and implementation details within these limits.
   current community statistics, require a connection to the API and may be
   unavailable or stale while offline.
 
+## Approved Milestone 2 API style
+
+- The Android app communicates with the DTBuddy Node.js backend over HTTPS
+  using JSON request and response bodies.
+- The API uses REST-style endpoints for resources and actions such as matches,
+  player profiles, statistics, and linked-match requests.
+- GraphQL and persistent real-time socket connections are not part of the
+  initial API design.
+
 ## Deferred technical decisions
 
 - Backend framework and API design.
