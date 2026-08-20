@@ -133,6 +133,19 @@ will define the architecture and implementation details within these limits.
 - GraphQL and persistent real-time socket connections are not part of the
   initial API design.
 
+## Approved Google sign-in implementation
+
+- The Android app uses Android Credential Manager for the approved
+  Google-only sign-in flow.
+- The app sends a Google ID token to the DTBuddy API over HTTPS. The API
+  verifies the token before creating or finding the DTBuddy account.
+- DTBuddy does not collect, handle, or store Google passwords. It requests
+  only the basic identity information needed for account creation.
+- The account link uses Google's verified stable subject identifier rather
+  than the user's email address.
+- This direct implementation uses no paid Google authentication service and
+  does not require the product owner to operate as a registered company.
+
 ## Approved PostgreSQL schema changes
 
 - Every PostgreSQL schema change is a versioned SQL migration file committed to
