@@ -17,4 +17,11 @@ class MatchHeroSelectionViewModel : ViewModel() {
         state = state.selectOpponent(hero)
     }
 
+    fun selectWinner(participant: MatchParticipant) {
+        state = state.selectWinner(participant)
+    }
+
+    fun selectFirstPlayer(participant: MatchParticipant) {
+        state = state.selectFirstPlayer(participant)
+    }
 }

@@ -30,7 +30,9 @@ import androidx.navigation.NavHostController
 
 private const val playerHeroRoute = "playerHero"
 private const val opponentHeroRoute = "opponentHero"
-private const val confirmationRoute = "confirmation"
+private const val winnerRoute = "winner"
+private const val firstPlayerRoute = "firstPlayer"
+private const val summaryRoute = "summary"
 
 @Composable
 fun HeroSelectionScreen(viewModel: MatchHeroSelectionViewModel) {
@@ -59,20 +61,77 @@ fun HeroSelectionScreen(viewModel: MatchHeroSelectionViewModel) {
                     selectedHeroName = null,
                     onHeroSelected = {
                         viewModel.selectOpponent(it)
-                        navController.navigate(confirmationRoute)
+                        navController.navigate(winnerRoute)
                     },
                     onBack = navController::popBackStack,
                 )
             }
         }
-        composable(confirmationRoute) {
+        composable(winnerRoute) {
             val state = viewModel.state
             if (state.playerHeroName == null || state.opponentHeroName == null) {
                 ReturnToPlayerHeroStep(navController)
             } else {
-                HeroConfirmation(
+                ParticipantChoice(
+                    title = "Who won?",
+                    description = "Choose the winner of this completed match.",
                     playerHeroName = state.playerHeroName,
                     opponentHeroName = state.opponentHeroName,
+                    playerChoiceLabel = "You won",
+                    opponentChoiceLabel = "Opponent won",
+                    onPlayerChosen = {
+                        viewModel.selectWinner(MatchParticipant.Player)
+                        navController.navigate(firstPlayerRoute)
+                    },
+                    onOpponentChosen = {
+                        viewModel.selectWinner(MatchParticipant.Opponent)
+                        navController.navigate(firstPlayerRoute)
+                    },
+                    onBack = navController::popBackStack,
+                )
+            }
+        }
+        composable(firstPlayerRoute) {
+            val state = viewModel.state
+            if (state.playerHeroName == null || state.opponentHeroName == null || state.winner == null) {
+                ReturnToPlayerHeroStep(navController)
+            } else {
+                ParticipantChoice(
+                    title = "Who went first?",
+                    description = "Choose which player took the first turn.",
+                    playerHeroName = state.playerHeroName,
+                    opponentHeroName = state.opponentHeroName,
+                    winnerText = "Winner: ${participantLabel(state.winner, state.playerHeroName, state.opponentHeroName)}",
+                    playerChoiceLabel = "You went first",
+                    opponentChoiceLabel = "Opponent went first",
+                    onPlayerChosen = {
+                        viewModel.selectFirstPlayer(MatchParticipant.Player)
+                        navController.navigate(summaryRoute)
+                    },
+                    onOpponentChosen = {
+                        viewModel.selectFirstPlayer(MatchParticipant.Opponent)
+                        navController.navigate(summaryRoute)
+                    },
+                    onBack = navController::popBackStack,
+                )
+            }
+        }
+        composable(summaryRoute) {
+            val state = viewModel.state
+            if (
+                state.playerHeroName == null ||
+                state.opponentHeroName == null ||
+                state.winner == null ||
+                state.firstPlayer == null
+            ) {
+                ReturnToPlayerHeroStep(navController)
+            } else {
+                MatchSummary(
+                    playerHeroName = state.playerHeroName,
+                    opponentHeroName = state.opponentHeroName,
+                    winner = state.winner,
+                    firstPlayer = state.firstPlayer,
+                    onBack = navController::popBackStack,
                 )
             }
         }
@@ -156,9 +215,17 @@ private fun HeroPicker(
 }
 
 @Composable
-private fun HeroConfirmation(
+private fun ParticipantChoice(
+    title: String,
+    description: String,
     playerHeroName: String,
     opponentHeroName: String,
+    playerChoiceLabel: String,
+    opponentChoiceLabel: String,
+    onPlayerChosen: () -> Unit,
+    onOpponentChosen: () -> Unit,
+    onBack: () -> Unit,
+    winnerText: String? = null,
 ) {
     Column(
         modifier = Modifier
@@ -166,14 +233,67 @@ private fun HeroConfirmation(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("Heroes chosen", style = MaterialTheme.typography.headlineMedium)
+        Button(onClick = onBack) {
+            Text("Back")
+        }
+        Text(title, style = MaterialTheme.typography.headlineMedium)
+        Text(description, style = MaterialTheme.typography.bodyLarge)
+        Text("Your hero: $playerHeroName", style = MaterialTheme.typography.bodyLarge)
+        Text("Opponent hero: $opponentHeroName", style = MaterialTheme.typography.bodyLarge)
+        if (winnerText != null) {
+            Text(winnerText, style = MaterialTheme.typography.bodyLarge)
+        }
+        Button(onClick = onPlayerChosen, modifier = Modifier.fillMaxWidth()) {
+            Text(playerChoiceLabel)
+        }
+        Button(onClick = onOpponentChosen, modifier = Modifier.fillMaxWidth()) {
+            Text(opponentChoiceLabel)
+        }
+    }
+}
+
+@Composable
+private fun MatchSummary(
+    playerHeroName: String,
+    opponentHeroName: String,
+    winner: MatchParticipant,
+    firstPlayer: MatchParticipant,
+    onBack: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Button(onClick = onBack) {
+            Text("Back")
+        }
+        Text("Match details chosen", style = MaterialTheme.typography.headlineMedium)
         Text("Your hero: $playerHeroName", style = MaterialTheme.typography.bodyLarge)
         Text("Opponent hero: $opponentHeroName", style = MaterialTheme.typography.bodyLarge)
         Text(
-            "The next match-log choices will be added in a later step.",
+            "Winner: ${participantLabel(winner, playerHeroName, opponentHeroName)}",
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        Text(
+            "First player: ${participantLabel(firstPlayer, playerHeroName, opponentHeroName)}",
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        Text(
+            "Date selection and saving will be added in a later step.",
             style = MaterialTheme.typography.bodyLarge,
         )
     }
+}
+
+private fun participantLabel(
+    participant: MatchParticipant,
+    playerHeroName: String,
+    opponentHeroName: String,
+): String = when (participant) {
+    MatchParticipant.Player -> "You ($playerHeroName)"
+    MatchParticipant.Opponent -> "Opponent ($opponentHeroName)"
 }
 
 @Composable
