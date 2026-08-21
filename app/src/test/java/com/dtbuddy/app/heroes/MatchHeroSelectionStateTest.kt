@@ -1,5 +1,6 @@
 package com.dtbuddy.app.heroes
 
+import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -53,6 +54,7 @@ class MatchHeroSelectionStateTest {
         assertEquals("Moon Elf", state.opponentHeroName)
         assertEquals(MatchParticipant.Opponent, state.winner)
         assertNull(state.firstPlayer)
+        assertNull(state.datePlayed)
     }
 
     @Test
@@ -67,5 +69,37 @@ class MatchHeroSelectionStateTest {
         assertEquals("Pyromancer", state.opponentHeroName)
         assertNull(state.winner)
         assertNull(state.firstPlayer)
+        assertNull(state.datePlayed)
+    }
+
+    @Test
+    fun selectingDateRetainsAllFiveChoices() {
+        val datePlayed = LocalDate.of(2026, 8, 20)
+        val state = MatchHeroSelectionState()
+            .selectPlayer(HeroCatalog.all.first())
+            .selectOpponent(HeroCatalog.all[1])
+            .selectWinner(MatchParticipant.Player)
+            .selectFirstPlayer(MatchParticipant.Opponent)
+            .selectDatePlayed(datePlayed)
+
+        assertEquals("Barbarian", state.playerHeroName)
+        assertEquals("Moon Elf", state.opponentHeroName)
+        assertEquals(MatchParticipant.Player, state.winner)
+        assertEquals(MatchParticipant.Opponent, state.firstPlayer)
+        assertEquals(datePlayed, state.datePlayed)
+    }
+
+    @Test
+    fun changingFirstPlayerClearsDate() {
+        val state = MatchHeroSelectionState()
+            .selectPlayer(HeroCatalog.all.first())
+            .selectOpponent(HeroCatalog.all[1])
+            .selectWinner(MatchParticipant.Player)
+            .selectFirstPlayer(MatchParticipant.Opponent)
+            .selectDatePlayed(LocalDate.of(2026, 8, 20))
+            .selectFirstPlayer(MatchParticipant.Player)
+
+        assertEquals(MatchParticipant.Player, state.firstPlayer)
+        assertNull(state.datePlayed)
     }
 }

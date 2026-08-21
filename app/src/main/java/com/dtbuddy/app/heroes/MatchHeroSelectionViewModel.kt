@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import java.time.LocalDate
 
 class MatchHeroSelectionViewModel : ViewModel() {
     var state by mutableStateOf(MatchHeroSelectionState())
@@ -23,5 +24,15 @@ class MatchHeroSelectionViewModel : ViewModel() {
 
     fun selectFirstPlayer(participant: MatchParticipant) {
         state = state.selectFirstPlayer(participant)
+    }
+
+    fun selectDatePlayed(date: LocalDate) {
+        state = state.selectDatePlayed(date)
+    }
+
+    fun ensureDatePlayed(today: LocalDate) {
+        if (state.datePlayed == null) {
+            selectDatePlayed(today)
+        }
     }
 }
