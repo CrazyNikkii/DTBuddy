@@ -14,4 +14,6 @@ class LocalMatchRepository(
             createdAtMillis = currentTimeMillis(),
         ),
     )
+
+    suspend fun getHistory(): List<CompletedMatchEntity> = completedMatchDao.getHistory()
 }

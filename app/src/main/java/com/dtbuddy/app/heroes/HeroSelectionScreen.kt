@@ -29,6 +29,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavHostController
+import com.dtbuddy.app.data.CompletedMatchEntity
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -41,6 +42,7 @@ private const val firstPlayerRoute = "firstPlayer"
 private const val datePlayedRoute = "datePlayed"
 private const val summaryRoute = "summary"
 private const val savedMatchRoute = "savedMatch"
+private const val matchHistoryRoute = "matchHistory"
 
 @Composable
 fun HeroSelectionScreen(viewModel: MatchHeroSelectionViewModel) {
@@ -181,6 +183,7 @@ fun HeroSelectionScreen(viewModel: MatchHeroSelectionViewModel) {
                 ReturnToPlayerHeroStep(navController)
             } else {
                 SavedMatchConfirmation(
+                    onViewMatchHistory = { navController.navigate(matchHistoryRoute) },
                     onLogAnotherMatch = {
                         viewModel.startNewMatch()
                         navController.navigate(playerHeroRoute) {
@@ -189,6 +192,16 @@ fun HeroSelectionScreen(viewModel: MatchHeroSelectionViewModel) {
                     },
                 )
             }
+        }
+        composable(matchHistoryRoute) {
+            LaunchedEffect(Unit) {
+                viewModel.loadHistory()
+            }
+            MatchHistory(
+                matches = viewModel.state.historyMatches,
+                hasLoadedHistory = viewModel.state.hasLoadedHistory,
+                onBack = navController::popBackStack,
+            )
         }
     }
 }
@@ -404,7 +417,10 @@ private fun MatchSummary(
 }
 
 @Composable
-private fun SavedMatchConfirmation(onLogAnotherMatch: () -> Unit) {
+private fun SavedMatchConfirmation(
+    onViewMatchHistory: () -> Unit,
+    onLogAnotherMatch: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -416,10 +432,70 @@ private fun SavedMatchConfirmation(onLogAnotherMatch: () -> Unit) {
             "This completed match is saved on this device.",
             style = MaterialTheme.typography.bodyLarge,
         )
+        Button(onClick = onViewMatchHistory, modifier = Modifier.fillMaxWidth()) {
+            Text("View match history")
+        }
         Button(onClick = onLogAnotherMatch, modifier = Modifier.fillMaxWidth()) {
             Text("Log another match")
         }
     }
+}
+
+@Composable
+private fun MatchHistory(
+    matches: List<CompletedMatchEntity>,
+    hasLoadedHistory: Boolean,
+    onBack: () -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Button(
+            onClick = onBack,
+            modifier = Modifier.padding(start = 24.dp, top = 16.dp),
+        ) {
+            Text("Back")
+        }
+        Text(
+            text = "Match history",
+            modifier = Modifier.padding(start = 24.dp, top = 24.dp, end = 24.dp),
+            style = MaterialTheme.typography.headlineMedium,
+        )
+        if (hasLoadedHistory && matches.isEmpty()) {
+            Text(
+                text = "No matches have been saved yet.",
+                modifier = Modifier.padding(24.dp),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        } else {
+            LazyColumn(
+                contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(matches, key = { it.id }) { match ->
+                    MatchHistoryRow(match)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MatchHistoryRow(match: CompletedMatchEntity) {
+    val datePlayed = LocalDate.parse(match.datePlayed)
+        .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
+    val result = if (match.winner == MatchParticipant.Player.name) "Won" else "Lost"
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(datePlayed, style = MaterialTheme.typography.titleMedium)
+        Text("Your hero: ${match.playerHeroName}", style = MaterialTheme.typography.bodyLarge)
+        Text("Opponent hero: ${match.opponentHeroName}", style = MaterialTheme.typography.bodyLarge)
+        Text(result, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+    }
+    HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
 }
 
 private fun participantLabel(

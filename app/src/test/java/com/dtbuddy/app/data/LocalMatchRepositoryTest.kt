@@ -37,6 +37,27 @@ class LocalMatchRepositoryTest {
         )
     }
 
+    @Test
+    fun historyOrdersByPlayedDateThenMostRecentlySaved() = runBlocking {
+        val dao = FakeCompletedMatchDao()
+        val timestamps = ArrayDeque(listOf(10L, 20L, 20L))
+        val repository = LocalMatchRepository(dao) { timestamps.removeFirst() }
+
+        repository.save(matchDraft(LocalDate.of(2026, 8, 20)))
+        repository.save(matchDraft(LocalDate.of(2026, 8, 21)))
+        repository.save(matchDraft(LocalDate.of(2026, 8, 21)))
+
+        assertEquals(listOf(3L, 2L, 1L), repository.getHistory().map { it.id })
+    }
+
+    private fun matchDraft(datePlayed: LocalDate) = CompletedMatchDraft(
+        playerHeroName = "Barbarian",
+        opponentHeroName = "Moon Elf",
+        winner = MatchParticipant.Player,
+        firstPlayer = MatchParticipant.Opponent,
+        datePlayed = datePlayed,
+    )
+
     private class FakeCompletedMatchDao : CompletedMatchDao {
         val matches = mutableListOf<CompletedMatchEntity>()
 
@@ -46,6 +67,10 @@ class LocalMatchRepositoryTest {
             return saved.id
         }
 
-        override suspend fun getAll(): List<CompletedMatchEntity> = matches.toList()
+        override suspend fun getHistory(): List<CompletedMatchEntity> = matches.sortedWith(
+            compareByDescending<CompletedMatchEntity> { it.datePlayed }
+                .thenByDescending { it.createdAtMillis }
+                .thenByDescending { it.id },
+        )
     }
 }

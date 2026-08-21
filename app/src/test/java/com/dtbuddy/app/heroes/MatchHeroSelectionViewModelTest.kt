@@ -57,6 +57,28 @@ class MatchHeroSelectionViewModelTest {
         assertEquals(1, dao.matches.size)
     }
 
+    @Test
+    fun loadHistoryMakesSavedMatchesAvailableForTheScreen() = runBlocking {
+        val dao = FakeCompletedMatchDao().apply {
+            matches += CompletedMatchEntity(
+                id = 1,
+                playerHeroName = "Barbarian",
+                opponentHeroName = "Moon Elf",
+                winner = "Player",
+                firstPlayer = "Opponent",
+                datePlayed = "2026-08-21",
+                createdAtMillis = 10L,
+            )
+        }
+        val viewModel = MatchHeroSelectionViewModel(LocalMatchRepository(dao))
+
+        viewModel.loadHistory()
+
+        assertTrue(viewModel.state.hasLoadedHistory)
+        assertEquals("Barbarian", viewModel.state.historyMatches.single().playerHeroName)
+        assertEquals("Player", viewModel.state.historyMatches.single().winner)
+    }
+
     private fun completeViewModel(dao: CompletedMatchDao): MatchHeroSelectionViewModel =
         MatchHeroSelectionViewModel(LocalMatchRepository(dao) { 10L }).also { viewModel ->
             viewModel.selectPlayer(HeroCatalog.all.first())
@@ -74,7 +96,7 @@ class MatchHeroSelectionViewModelTest {
             return matches.size.toLong()
         }
 
-        override suspend fun getAll(): List<CompletedMatchEntity> = matches.toList()
+        override suspend fun getHistory(): List<CompletedMatchEntity> = matches.toList()
     }
 
     private class BlockingCompletedMatchDao : CompletedMatchDao {
@@ -89,6 +111,6 @@ class MatchHeroSelectionViewModelTest {
             return matches.size.toLong()
         }
 
-        override suspend fun getAll(): List<CompletedMatchEntity> = matches.toList()
+        override suspend fun getHistory(): List<CompletedMatchEntity> = matches.toList()
     }
 }
