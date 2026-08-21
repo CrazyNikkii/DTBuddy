@@ -4,9 +4,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.dtbuddy.app.data.CompletedMatchDraft
+import com.dtbuddy.app.data.LocalMatchRepository
 import java.time.LocalDate
 
-class MatchHeroSelectionViewModel : ViewModel() {
+class MatchHeroSelectionViewModel(
+    private val localMatchRepository: LocalMatchRepository,
+) : ViewModel() {
     var state by mutableStateOf(MatchHeroSelectionState())
         private set
 
@@ -34,5 +38,22 @@ class MatchHeroSelectionViewModel : ViewModel() {
         if (state.datePlayed == null) {
             selectDatePlayed(today)
         }
+    }
+
+    suspend fun saveMatch(): Boolean {
+        if (state.isSaving) return false
+
+        val draft = state.completedMatchDraftOrNull() ?: return false
+        state = state.copy(isSaving = true)
+        return try {
+            localMatchRepository.save(draft)
+            true
+        } finally {
+            state = state.copy(isSaving = false)
+        }
+    }
+
+    fun startNewMatch() {
+        state = MatchHeroSelectionState()
     }
 }
