@@ -3,10 +3,10 @@ package com.dtbuddy.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.MaterialTheme
 import androidx.lifecycle.ViewModel
 import com.dtbuddy.app.heroes.HeroSelectionScreen
 import com.dtbuddy.app.heroes.MatchHeroSelectionViewModel
+import com.dtbuddy.app.ui.theme.DTBuddyTheme
 import androidx.lifecycle.ViewModelProvider
 
 class MainActivity : ComponentActivity() {
@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
             }
         })[MatchHeroSelectionViewModel::class.java]
         setContent {
-            MaterialTheme {
+            DTBuddyTheme {
                 HeroSelectionScreen(matchHeroSelectionViewModel)
             }
         }

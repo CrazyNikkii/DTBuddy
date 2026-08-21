@@ -9,3 +9,6 @@ app/build/
 *.iml
 .idea/
 local.properties
+
+# Working visual mockups are maintained outside version control.
+docs/design/mockups/

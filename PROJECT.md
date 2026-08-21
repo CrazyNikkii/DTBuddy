@@ -93,15 +93,32 @@ release does not change this roster without an explicit product decision.
 
 ## Confirmed main navigation
 
-- Home is the global hero-statistics discovery view.
+- The app's primary navigation uses four destinations: **Log match**,
+  **Requests**, **Profile**, and **Global stats**. The Log match destination is
+  the initial selected destination during the solo test and makes starting a
+  match quick. Global stats is the global hero-statistics discovery view.
+- Requests is shown when linked-match requests are available in Milestone 2;
+  it shows a badge/count for pending confirmations and change requests. It is
+  not a functional solo-test feature.
 - My profile contains the player's overview and links to their Heroes and
   Match history pages.
 - Player search is added with multi-user features so players can find and open
   public profiles.
-- Requests is added with linked matches and shows pending confirmations and
-  change requests.
 - The navigation structure is established in milestone 1 and expanded as the
   related features become available, avoiding a later UI/UX redesign.
+
+## Confirmed visual direction
+
+- DTBuddy has an original, dark, tactile tabletop-inspired visual style. Its
+  base colours are charcoal and blue-grey, with fiery orange and warm-gold
+  accents used deliberately for primary actions, selected navigation, and
+  small attention indicators such as pending-request badges.
+- The interface feels dramatic but calm and remains easy to read: generous
+  breathing room, high-contrast text, clear hierarchy, and one prominent
+  primary action per screen where appropriate.
+- The app uses original UI components, placeholder branding until a DTBuddy
+  logo is supplied, and original icons. It must not copy Dice Throne logos,
+  artwork, cards, dice, typography, or other distinctive visual assets.
 
 ## Original product ideas
 
