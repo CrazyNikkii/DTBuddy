@@ -1,5 +1,6 @@
 package com.dtbuddy.app.heroes
 
+import com.dtbuddy.app.data.CompletedMatchEntity
 import java.time.LocalDate
 
 enum class MatchParticipant {
@@ -14,6 +15,8 @@ data class MatchHeroSelectionState(
     val firstPlayer: MatchParticipant? = null,
     val datePlayed: LocalDate? = null,
     val isSaving: Boolean = false,
+    val historyMatches: List<CompletedMatchEntity> = emptyList(),
+    val hasLoadedHistory: Boolean = false,
 ) {
     fun selectPlayer(hero: Hero): MatchHeroSelectionState = copy(
         playerHeroName = hero.name,

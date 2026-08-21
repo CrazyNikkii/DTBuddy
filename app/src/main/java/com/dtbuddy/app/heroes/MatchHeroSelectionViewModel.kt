@@ -53,6 +53,13 @@ class MatchHeroSelectionViewModel(
         }
     }
 
+    suspend fun loadHistory() {
+        state = state.copy(
+            historyMatches = localMatchRepository.getHistory(),
+            hasLoadedHistory = true,
+        )
+    }
+
     fun startNewMatch() {
         state = MatchHeroSelectionState()
     }
