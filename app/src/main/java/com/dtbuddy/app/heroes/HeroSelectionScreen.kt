@@ -18,12 +18,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -32,6 +32,7 @@ import androidx.navigation.NavHostController
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import kotlinx.coroutines.launch
 
 private const val playerHeroRoute = "playerHero"
 private const val opponentHeroRoute = "opponentHero"
@@ -39,10 +40,12 @@ private const val winnerRoute = "winner"
 private const val firstPlayerRoute = "firstPlayer"
 private const val datePlayedRoute = "datePlayed"
 private const val summaryRoute = "summary"
+private const val savedMatchRoute = "savedMatch"
 
 @Composable
 fun HeroSelectionScreen(viewModel: MatchHeroSelectionViewModel) {
     val navController = rememberNavController()
+    val coroutineScope = rememberCoroutineScope()
 
     NavHost(navController = navController, startDestination = playerHeroRoute) {
         composable(playerHeroRoute) {
@@ -159,7 +162,31 @@ fun HeroSelectionScreen(viewModel: MatchHeroSelectionViewModel) {
                     winner = state.winner,
                     firstPlayer = state.firstPlayer,
                     datePlayed = state.datePlayed,
+                    isSaving = state.isSaving,
+                    onSave = {
+                        coroutineScope.launch {
+                            if (viewModel.saveMatch()) {
+                                navController.navigate(savedMatchRoute) {
+                                    popUpTo(summaryRoute) { inclusive = true }
+                                }
+                            }
+                        }
+                    },
                     onBack = navController::popBackStack,
+                )
+            }
+        }
+        composable(savedMatchRoute) {
+            if (viewModel.state.completedMatchDraftOrNull() == null) {
+                ReturnToPlayerHeroStep(navController)
+            } else {
+                SavedMatchConfirmation(
+                    onLogAnotherMatch = {
+                        viewModel.startNewMatch()
+                        navController.navigate(playerHeroRoute) {
+                            popUpTo(playerHeroRoute) { inclusive = true }
+                        }
+                    },
                 )
             }
         }
@@ -334,6 +361,8 @@ private fun MatchSummary(
     winner: MatchParticipant,
     firstPlayer: MatchParticipant,
     datePlayed: LocalDate,
+    isSaving: Boolean,
+    onSave: () -> Unit,
     onBack: () -> Unit,
 ) {
     Column(
@@ -361,9 +390,35 @@ private fun MatchSummary(
             style = MaterialTheme.typography.bodyLarge,
         )
         Text(
-            "Review and saving will be added in a later step.",
+            "Check the details, then save this completed match on your device.",
             style = MaterialTheme.typography.bodyLarge,
         )
+        Button(
+            onClick = onSave,
+            enabled = !isSaving,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(if (isSaving) "Saving match…" else "Save match")
+        }
+    }
+}
+
+@Composable
+private fun SavedMatchConfirmation(onLogAnotherMatch: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Text("Match saved", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            "This completed match is saved on this device.",
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        Button(onClick = onLogAnotherMatch, modifier = Modifier.fillMaxWidth()) {
+            Text("Log another match")
+        }
     }
 }
 
@@ -425,12 +480,4 @@ private fun HeroRow(
         Text(if (isSelected) "${hero.name} (selected)" else hero.name)
     }
     HorizontalDivider()
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun HeroSelectionScreenPreview() {
-    MaterialTheme {
-        HeroSelectionScreen(MatchHeroSelectionViewModel())
-    }
 }
