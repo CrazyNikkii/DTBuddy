@@ -82,6 +82,31 @@ class LocalMatchRepositoryTest {
         assertEquals(67, repository.getPersonalOverallStats().winRatePercentage)
     }
 
+    @Test
+    fun personalHeroStatsHandleEmptyResultsAndOnlyIncludePlayerHeroes() = runBlocking {
+        val dao = FakeCompletedMatchDao()
+        val repository = LocalMatchRepository(dao)
+
+        assertEquals(emptyList<PersonalHeroStats>(), repository.getPersonalHeroStats())
+
+        dao.matches += savedMatch(id = 1, playerHeroName = "Barbarian", opponentHeroName = "Moon Elf", winner = "Player")
+        dao.matches += savedMatch(id = 2, playerHeroName = "Barbarian", opponentHeroName = "Loki", winner = "Opponent")
+        dao.matches += savedMatch(id = 3, playerHeroName = "Moon Elf", opponentHeroName = "Barbarian", winner = "Opponent")
+        dao.matches += savedMatch(id = 4, playerHeroName = "Alchemist", opponentHeroName = "Barbarian", winner = "Player")
+
+        assertEquals(
+            listOf(
+                PersonalHeroStats(heroName = "Alchemist", gamesPlayed = 1, wins = 1, losses = 0),
+                PersonalHeroStats(heroName = "Barbarian", gamesPlayed = 2, wins = 1, losses = 1),
+                PersonalHeroStats(heroName = "Moon Elf", gamesPlayed = 1, wins = 0, losses = 1),
+            ),
+            repository.getPersonalHeroStats(),
+        )
+        assertEquals(100, repository.getPersonalHeroStats()[0].winRatePercentage)
+        assertEquals(50, repository.getPersonalHeroStats()[1].winRatePercentage)
+        assertEquals(0, repository.getPersonalHeroStats()[2].winRatePercentage)
+    }
+
     private fun matchDraft(datePlayed: LocalDate) = CompletedMatchDraft(
         playerHeroName = "Barbarian",
         opponentHeroName = "Moon Elf",
@@ -90,10 +115,15 @@ class LocalMatchRepositoryTest {
         datePlayed = datePlayed,
     )
 
-    private fun savedMatch(id: Long, winner: String) = CompletedMatchEntity(
+    private fun savedMatch(
+        id: Long,
+        winner: String,
+        playerHeroName: String = "Barbarian",
+        opponentHeroName: String = "Moon Elf",
+    ) = CompletedMatchEntity(
         id = id,
-        playerHeroName = "Barbarian",
-        opponentHeroName = "Moon Elf",
+        playerHeroName = playerHeroName,
+        opponentHeroName = opponentHeroName,
         winner = winner,
         firstPlayer = "Player",
         datePlayed = "2026-08-21",

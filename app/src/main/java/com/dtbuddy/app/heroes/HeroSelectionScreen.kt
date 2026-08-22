@@ -36,6 +36,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavHostController
 import com.dtbuddy.app.data.CompletedMatchEntity
+import com.dtbuddy.app.data.PersonalHeroStats
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -55,6 +56,12 @@ private enum class MainDestination(val label: String) {
     Requests("Requests"),
     Profile("Profile"),
     GlobalStats("Global stats"),
+}
+
+private enum class ProfilePage {
+    Overview,
+    Heroes,
+    History,
 }
 
 @Composable
@@ -327,44 +334,117 @@ private fun PlaceholderDestination(title: String, message: String) {
 
 @Composable
 private fun ProfileDestination(viewModel: MatchHeroSelectionViewModel) {
-    var showingHistory by rememberSaveable { mutableStateOf(false) }
+    var profilePageName by rememberSaveable { mutableStateOf(ProfilePage.Overview.name) }
+    val profilePage = ProfilePage.valueOf(profilePageName)
 
-    if (showingHistory) {
-        BackHandler { showingHistory = false }
-        LaunchedEffect(Unit) {
-            viewModel.loadHistory()
-        }
-        MatchHistory(
-            matches = viewModel.state.historyMatches,
-            hasLoadedHistory = viewModel.state.hasLoadedHistory,
-            onBack = { showingHistory = false },
-        )
-    } else {
-        LaunchedEffect(Unit) {
-            viewModel.loadPersonalOverallStats()
-        }
-        val stats = viewModel.state.personalOverallStats
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Text("My profile", style = MaterialTheme.typography.headlineMedium)
-            Text(
-                "During this solo test, your saved matches stay on this device.",
-                style = MaterialTheme.typography.bodyLarge,
+    when (profilePage) {
+        ProfilePage.History -> {
+            BackHandler { profilePageName = ProfilePage.Overview.name }
+            LaunchedEffect(Unit) {
+                viewModel.loadHistory()
+            }
+            MatchHistory(
+                matches = viewModel.state.historyMatches,
+                hasLoadedHistory = viewModel.state.hasLoadedHistory,
+                onBack = { profilePageName = ProfilePage.Overview.name },
             )
-            Text("Personal overall", style = MaterialTheme.typography.titleLarge)
-            Text("Games played: ${stats.gamesPlayed}", style = MaterialTheme.typography.bodyLarge)
-            Text("Wins: ${stats.wins}", style = MaterialTheme.typography.bodyLarge)
-            Text("Losses: ${stats.losses}", style = MaterialTheme.typography.bodyLarge)
-            Text("Win rate: ${stats.winRatePercentage}%", style = MaterialTheme.typography.bodyLarge)
-            Button(onClick = { showingHistory = true }, modifier = Modifier.fillMaxWidth()) {
-                Text("Match history")
+        }
+        ProfilePage.Heroes -> {
+            BackHandler { profilePageName = ProfilePage.Overview.name }
+            LaunchedEffect(Unit) {
+                viewModel.loadPersonalHeroStats()
+            }
+            PersonalHeroes(
+                stats = viewModel.state.personalHeroStats,
+                onBack = { profilePageName = ProfilePage.Overview.name },
+            )
+        }
+        ProfilePage.Overview -> {
+            LaunchedEffect(Unit) {
+                viewModel.loadPersonalOverallStats()
+            }
+            val stats = viewModel.state.personalOverallStats
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                Text("My profile", style = MaterialTheme.typography.headlineMedium)
+                Text(
+                    "During this solo test, your saved matches stay on this device.",
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                Text("Personal overall", style = MaterialTheme.typography.titleLarge)
+                Text("Games played: ${stats.gamesPlayed}", style = MaterialTheme.typography.bodyLarge)
+                Text("Wins: ${stats.wins}", style = MaterialTheme.typography.bodyLarge)
+                Text("Losses: ${stats.losses}", style = MaterialTheme.typography.bodyLarge)
+                Text("Win rate: ${stats.winRatePercentage}%", style = MaterialTheme.typography.bodyLarge)
+                Button(
+                    onClick = { profilePageName = ProfilePage.Heroes.name },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Heroes")
+                }
+                Button(
+                    onClick = { profilePageName = ProfilePage.History.name },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Match history")
+                }
             }
         }
     }
+}
+
+@Composable
+private fun PersonalHeroes(stats: List<PersonalHeroStats>, onBack: () -> Unit) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Button(
+            onClick = onBack,
+            modifier = Modifier.padding(start = 24.dp, top = 16.dp),
+        ) {
+            Text("Back")
+        }
+        Text(
+            text = "Heroes",
+            modifier = Modifier.padding(start = 24.dp, top = 24.dp, end = 24.dp),
+            style = MaterialTheme.typography.headlineMedium,
+        )
+        if (stats.isEmpty()) {
+            Text(
+                text = "No heroes have been played yet.",
+                modifier = Modifier.padding(24.dp),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        } else {
+            LazyColumn(
+                contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(stats, key = { it.heroName }) { heroStats ->
+                    PersonalHeroStatsRow(heroStats)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PersonalHeroStatsRow(stats: PersonalHeroStats) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(stats.heroName, style = MaterialTheme.typography.titleMedium)
+        Text("Games played: ${stats.gamesPlayed}", style = MaterialTheme.typography.bodyLarge)
+        Text("Wins: ${stats.wins}", style = MaterialTheme.typography.bodyLarge)
+        Text("Losses: ${stats.losses}", style = MaterialTheme.typography.bodyLarge)
+        Text("Win rate: ${stats.winRatePercentage}%", style = MaterialTheme.typography.bodyLarge)
+    }
+    HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
 }
 
 @Composable
