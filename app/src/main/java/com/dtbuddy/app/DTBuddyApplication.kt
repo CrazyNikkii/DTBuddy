@@ -11,7 +11,7 @@ class DTBuddyApplication : Application() {
             applicationContext,
             AppDatabase::class.java,
             "dtbuddy.db",
-        ).build()
+        ).addMigrations(AppDatabase.MIGRATION_1_2).build()
         LocalMatchRepository(database.completedMatchDao())
     }
 }

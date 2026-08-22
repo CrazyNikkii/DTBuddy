@@ -14,6 +14,7 @@ data class CompletedMatchEntity(
     val firstPlayer: String,
     val datePlayed: String,
     val createdAtMillis: Long,
+    val note: String? = null,
 )
 
 data class CompletedMatchDraft(
@@ -22,4 +23,5 @@ data class CompletedMatchDraft(
     val winner: MatchParticipant,
     val firstPlayer: MatchParticipant,
     val datePlayed: LocalDate,
+    val note: String? = null,
 )

@@ -23,7 +23,8 @@ interface CompletedMatchDao {
             opponentHeroName = :opponentHeroName,
             winner = :winner,
             firstPlayer = :firstPlayer,
-            datePlayed = :datePlayed
+            datePlayed = :datePlayed,
+            note = :note
         WHERE id = :id
         """,
     )
@@ -34,5 +35,6 @@ interface CompletedMatchDao {
         winner: String,
         firstPlayer: String,
         datePlayed: String,
+        note: String?,
     ): Int
 }

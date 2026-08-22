@@ -152,6 +152,40 @@ class MatchHeroSelectionViewModelTest {
     }
 
     @Test
+    fun discardingAnEditClearsOnlyTheDraftAndDoesNotWriteTheStoredMatch() {
+        val match = completedMatch(id = 1, winner = "Player")
+        val dao = FakeCompletedMatchDao().apply { matches += match }
+        val viewModel = MatchHeroSelectionViewModel(LocalMatchRepository(dao))
+
+        viewModel.startEditing(match, returnToProfileHistory = true)
+        viewModel.selectWinner(MatchParticipant.Opponent)
+        viewModel.discardEditing()
+
+        assertFalse(viewModel.state.isEditing)
+        assertFalse(viewModel.state.editReturnToProfileHistory)
+        assertEquals(listOf(match), dao.matches)
+    }
+
+    @Test
+    fun noteDraftIsLimitedPrefilledAndOnlySavedWhenTheEditIsSaved() = runBlocking {
+        val match = completedMatch(id = 1, winner = "Player").copy(note = "Original note")
+        val dao = FakeCompletedMatchDao().apply { matches += match }
+        val viewModel = MatchHeroSelectionViewModel(LocalMatchRepository(dao))
+
+        viewModel.startEditing(match)
+        viewModel.selectNote("Updated note")
+        assertEquals("Updated note", viewModel.state.note)
+        assertEquals("Original note", dao.matches.single().note)
+
+        assertTrue(viewModel.saveMatch())
+        assertEquals("Updated note", dao.matches.single().note)
+
+        viewModel.startNewMatch()
+        viewModel.selectNote("x".repeat(501))
+        assertEquals(500, viewModel.state.note.length)
+    }
+
+    @Test
     fun changingOneValueWhileEditingKeepsEveryOtherEditValue() {
         val viewModel = MatchHeroSelectionViewModel(LocalMatchRepository(FakeCompletedMatchDao()))
         viewModel.startEditing(
@@ -324,6 +358,7 @@ class MatchHeroSelectionViewModelTest {
             winner: String,
             firstPlayer: String,
             datePlayed: String,
+            note: String?,
         ): Int {
             val index = matches.indexOfFirst { it.id == id }
             if (index == -1) return 0
@@ -333,6 +368,7 @@ class MatchHeroSelectionViewModelTest {
                 winner = winner,
                 firstPlayer = firstPlayer,
                 datePlayed = datePlayed,
+                note = note,
             )
             return 1
         }
@@ -361,6 +397,7 @@ class MatchHeroSelectionViewModelTest {
             winner: String,
             firstPlayer: String,
             datePlayed: String,
+            note: String?,
         ): Int = 0
     }
 }

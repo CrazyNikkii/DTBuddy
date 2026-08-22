@@ -107,6 +107,19 @@ release does not change this roster without an explicit product decision.
 - The navigation structure is established in milestone 1 and expanded as the
   related features become available, avoiding a later UI/UX redesign.
 
+### Confirmed back-navigation behaviour
+
+- Android's system Back gesture and Back button return the player to the
+  immediately preceding screen, continuing one screen at a time through the
+  navigation path.
+- If leaving a screen would abandon unsaved player input, the app asks for
+  confirmation before discarding it. Choosing to keep editing leaves the draft
+  unchanged; choosing to discard makes no saved-data change.
+- The app exits only when the player uses Back from the main-menu root and no
+  earlier screen remains. Until the planned main-menu screen is introduced,
+  the selected primary navigation destination with no nested screen is the
+  temporary root for this behaviour.
+
 ## Confirmed visual direction
 
 - DTBuddy has an original, dark, tactile tabletop-inspired visual style. Its

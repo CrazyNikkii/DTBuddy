@@ -72,6 +72,7 @@ class LocalMatchRepository(
             firstPlayer = draft.firstPlayer.name,
             datePlayed = draft.datePlayed.toString(),
             createdAtMillis = currentTimeMillis(),
+            note = draft.note.normalizedNote(),
         ),
     )
 
@@ -86,6 +87,7 @@ class LocalMatchRepository(
         winner = draft.winner.name,
         firstPlayer = draft.firstPlayer.name,
         datePlayed = draft.datePlayed.toString(),
+        note = draft.note.normalizedNote(),
     ) == 1
 
     suspend fun getPersonalOverallStats(): PersonalOverallStats {
@@ -152,3 +154,5 @@ private fun List<CompletedMatchEntity>.toPersonalTurnOrderStats(): PersonalTurnO
         losses = size - wins,
     )
 }
+
+private fun String?.normalizedNote(): String? = this?.trim()?.takeIf { it.isNotEmpty() }
