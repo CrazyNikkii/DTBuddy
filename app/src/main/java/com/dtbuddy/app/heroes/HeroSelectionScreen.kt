@@ -1,7 +1,9 @@
 package com.dtbuddy.app.heroes
 
 import android.app.DatePickerDialog
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,12 +14,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -44,8 +50,45 @@ private const val summaryRoute = "summary"
 private const val savedMatchRoute = "savedMatch"
 private const val matchHistoryRoute = "matchHistory"
 
+private enum class MainDestination(val label: String) {
+    LogMatch("Log match"),
+    Requests("Requests"),
+    Profile("Profile"),
+    GlobalStats("Global stats"),
+}
+
 @Composable
 fun HeroSelectionScreen(viewModel: MatchHeroSelectionViewModel) {
+    var selectedDestinationName by remember { mutableStateOf(MainDestination.LogMatch.name) }
+    val selectedDestination = MainDestination.valueOf(selectedDestinationName)
+
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                MainDestination.entries.forEach { destination ->
+                    NavigationBarItem(
+                        selected = selectedDestination == destination,
+                        onClick = { selectedDestinationName = destination.name },
+                        icon = { Text(destination.label) },
+                        alwaysShowLabel = false,
+                    )
+                }
+            }
+        },
+    ) { contentPadding ->
+        Box(modifier = Modifier.padding(contentPadding)) {
+            when (selectedDestination) {
+                MainDestination.LogMatch -> MatchLogFlow(viewModel)
+                MainDestination.Requests -> RequestsPlaceholder()
+                MainDestination.Profile -> ProfileDestination(viewModel)
+                MainDestination.GlobalStats -> GlobalStatsPlaceholder()
+            }
+        }
+    }
+}
+
+@Composable
+private fun MatchLogFlow(viewModel: MatchHeroSelectionViewModel) {
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
 
@@ -249,6 +292,68 @@ private fun DatePlayedChoice(
         }
         Button(onClick = onContinue, modifier = Modifier.fillMaxWidth()) {
             Text("Continue")
+        }
+    }
+}
+
+@Composable
+private fun RequestsPlaceholder() {
+    PlaceholderDestination(
+        title = "Requests",
+        message = "Linked-match requests will be available in a later milestone. They are not part of this local solo test.",
+    )
+}
+
+@Composable
+private fun GlobalStatsPlaceholder() {
+    PlaceholderDestination(
+        title = "Global stats",
+        message = "Community statistics are not available yet. This local solo test keeps your saved matches on this device.",
+    )
+}
+
+@Composable
+private fun PlaceholderDestination(title: String, message: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Text(title, style = MaterialTheme.typography.headlineMedium)
+        Text(message, style = MaterialTheme.typography.bodyLarge)
+    }
+}
+
+@Composable
+private fun ProfileDestination(viewModel: MatchHeroSelectionViewModel) {
+    var showingHistory by rememberSaveable { mutableStateOf(false) }
+
+    if (showingHistory) {
+        BackHandler { showingHistory = false }
+        LaunchedEffect(Unit) {
+            viewModel.loadHistory()
+        }
+        MatchHistory(
+            matches = viewModel.state.historyMatches,
+            hasLoadedHistory = viewModel.state.hasLoadedHistory,
+            onBack = { showingHistory = false },
+        )
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Text("My profile", style = MaterialTheme.typography.headlineMedium)
+            Text(
+                "During this solo test, your saved matches stay on this device.",
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            Button(onClick = { showingHistory = true }, modifier = Modifier.fillMaxWidth()) {
+                Text("Match history")
+            }
         }
     }
 }
