@@ -36,7 +36,7 @@ class MatchHeroSelectionViewModel(
 
     fun ensureDatePlayed(today: LocalDate) {
         if (state.datePlayed == null) {
-            selectDatePlayed(today)
+            selectDatePlayed(state.editingOriginalDatePlayed ?: today)
         }
     }
 
@@ -46,8 +46,23 @@ class MatchHeroSelectionViewModel(
         val draft = state.completedMatchDraftOrNull() ?: return false
         state = state.copy(isSaving = true)
         return try {
-            localMatchRepository.save(draft)
-            true
+            val editingMatchId = state.editingMatchId
+            if (editingMatchId == null) {
+                localMatchRepository.save(draft)
+                state = state.copy(lastSaveWasEdit = false)
+                true
+            } else {
+                localMatchRepository.update(editingMatchId, draft).also { updated ->
+                    if (updated) {
+                        state = state.copy(
+                            editingMatchId = null,
+                            editingOriginalDatePlayed = null,
+                            lastSaveWasEdit = true,
+                        )
+                        loadHistory()
+                    }
+                }
+            }
         } finally {
             state = state.copy(isSaving = false)
         }
@@ -66,6 +81,10 @@ class MatchHeroSelectionViewModel(
 
     fun cancelMatchDeletion() {
         state = state.copy(pendingDeletionMatch = null)
+    }
+
+    fun startEditing(match: com.dtbuddy.app.data.CompletedMatchEntity) {
+        state = state.startEditing(match)
     }
 
     suspend fun confirmMatchDeletion(): Boolean {

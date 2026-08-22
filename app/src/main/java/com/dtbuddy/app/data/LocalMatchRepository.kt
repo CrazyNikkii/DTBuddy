@@ -79,6 +79,15 @@ class LocalMatchRepository(
 
     suspend fun delete(matchId: Long): Boolean = completedMatchDao.deleteById(matchId) == 1
 
+    suspend fun update(matchId: Long, draft: CompletedMatchDraft): Boolean = completedMatchDao.updateById(
+        id = matchId,
+        playerHeroName = draft.playerHeroName,
+        opponentHeroName = draft.opponentHeroName,
+        winner = draft.winner.name,
+        firstPlayer = draft.firstPlayer.name,
+        datePlayed = draft.datePlayed.toString(),
+    ) == 1
+
     suspend fun getPersonalOverallStats(): PersonalOverallStats {
         val matches = completedMatchDao.getHistory()
         val wins = matches.count { it.winner == "Player" }

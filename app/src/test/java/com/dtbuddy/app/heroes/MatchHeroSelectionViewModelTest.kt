@@ -109,6 +109,123 @@ class MatchHeroSelectionViewModelTest {
     }
 
     @Test
+    fun editingPrefillsTheSelectedMatchAndSavesOnlyItsRevisedValues() = runBlocking {
+        val selected = completedMatch(id = 1, winner = "Player", firstPlayer = "Opponent")
+        val untouched = completedMatch(id = 2, winner = "Opponent", opponentHeroName = "Loki")
+        val dao = FakeCompletedMatchDao().apply { matches += listOf(selected, untouched) }
+        val viewModel = MatchHeroSelectionViewModel(LocalMatchRepository(dao))
+
+        viewModel.startEditing(selected)
+
+        assertTrue(viewModel.state.isEditing)
+        assertEquals("Barbarian", viewModel.state.playerHeroName)
+        assertEquals("Moon Elf", viewModel.state.opponentHeroName)
+        assertEquals(MatchParticipant.Player, viewModel.state.winner)
+        assertEquals(MatchParticipant.Opponent, viewModel.state.firstPlayer)
+        assertEquals(LocalDate.of(2026, 8, 21), viewModel.state.datePlayed)
+
+        viewModel.selectOpponent(HeroCatalog.all.first { it.name == "Loki" })
+        viewModel.selectWinner(MatchParticipant.Opponent)
+        viewModel.selectFirstPlayer(MatchParticipant.Player)
+        viewModel.selectDatePlayed(LocalDate.of(2026, 8, 22))
+
+        assertTrue(viewModel.saveMatch())
+        assertEquals(2, dao.matches.size)
+        assertEquals("Loki", dao.matches.single { it.id == 1L }.opponentHeroName)
+        assertEquals("Opponent", dao.matches.single { it.id == 1L }.winner)
+        assertEquals("Player", dao.matches.single { it.id == 1L }.firstPlayer)
+        assertEquals("2026-08-22", dao.matches.single { it.id == 1L }.datePlayed)
+        assertEquals(untouched, dao.matches.single { it.id == 2L })
+        assertEquals(listOf(1L, 2L), viewModel.state.historyMatches.map { it.id })
+    }
+
+    @Test
+    fun startingAnEditDoesNotWriteUntilThePlayerSaves() = runBlocking {
+        val match = completedMatch(id = 1, winner = "Player")
+        val dao = FakeCompletedMatchDao().apply { matches += match }
+        val viewModel = MatchHeroSelectionViewModel(LocalMatchRepository(dao))
+
+        viewModel.startEditing(match)
+        viewModel.selectWinner(MatchParticipant.Opponent)
+
+        assertEquals(listOf(match), dao.matches)
+    }
+
+    @Test
+    fun changingOneValueWhileEditingKeepsEveryOtherEditValue() {
+        val viewModel = MatchHeroSelectionViewModel(LocalMatchRepository(FakeCompletedMatchDao()))
+        viewModel.startEditing(
+            completedMatch(
+                id = 1,
+                winner = "Player",
+                playerHeroName = "Barbarian",
+                opponentHeroName = "Moon Elf",
+                firstPlayer = "Player",
+            ),
+        )
+
+        viewModel.selectFirstPlayer(MatchParticipant.Opponent)
+
+        assertEquals("Barbarian", viewModel.state.playerHeroName)
+        assertEquals("Moon Elf", viewModel.state.opponentHeroName)
+        assertEquals(MatchParticipant.Player, viewModel.state.winner)
+        assertEquals(MatchParticipant.Opponent, viewModel.state.firstPlayer)
+        assertEquals(LocalDate.of(2026, 8, 21), viewModel.state.datePlayed)
+    }
+
+    @Test
+    fun changingAValueInANewMatchStillClearsLaterGuidedChoices() {
+        val viewModel = completeViewModel(FakeCompletedMatchDao())
+
+        viewModel.selectWinner(MatchParticipant.Opponent)
+
+        assertEquals(MatchParticipant.Opponent, viewModel.state.winner)
+        assertEquals(null, viewModel.state.firstPlayer)
+        assertEquals(null, viewModel.state.datePlayed)
+    }
+
+    @Test
+    fun unchangedEditKeepsItsOriginalDateWhenTheGuidedChoicesAreReselected() = runBlocking {
+        val match = completedMatch(id = 1, winner = "Player", firstPlayer = "Opponent")
+        val dao = FakeCompletedMatchDao().apply { matches += match }
+        val viewModel = MatchHeroSelectionViewModel(LocalMatchRepository(dao))
+
+        viewModel.startEditing(match)
+        viewModel.selectPlayer(HeroCatalog.all.first { it.name == "Barbarian" })
+        viewModel.selectOpponent(HeroCatalog.all.first { it.name == "Moon Elf" })
+        viewModel.selectWinner(MatchParticipant.Player)
+        viewModel.selectFirstPlayer(MatchParticipant.Opponent)
+        viewModel.ensureDatePlayed(LocalDate.of(2026, 8, 22))
+
+        assertEquals(LocalDate.of(2026, 8, 21), viewModel.state.datePlayed)
+        assertTrue(viewModel.saveMatch())
+        assertEquals("2026-08-21", dao.matches.single().datePlayed)
+    }
+
+    @Test
+    fun successfulEditEndsEditModeSoTheNextSavedMatchIsNew() = runBlocking {
+        val edited = completedMatch(id = 1, winner = "Player")
+        val dao = FakeCompletedMatchDao().apply { matches += edited }
+        val viewModel = MatchHeroSelectionViewModel(LocalMatchRepository(dao))
+
+        viewModel.startEditing(edited)
+        assertTrue(viewModel.saveMatch())
+        assertFalse(viewModel.state.isEditing)
+        assertTrue(viewModel.state.lastSaveWasEdit)
+
+        viewModel.selectPlayer(HeroCatalog.all.first { it.name == "Moon Elf" })
+        viewModel.selectOpponent(HeroCatalog.all.first { it.name == "Loki" })
+        viewModel.selectWinner(MatchParticipant.Opponent)
+        viewModel.selectFirstPlayer(MatchParticipant.Player)
+        viewModel.ensureDatePlayed(LocalDate.of(2026, 8, 22))
+
+        assertTrue(viewModel.saveMatch())
+        assertEquals(2, dao.matches.size)
+        assertEquals(edited, dao.matches.single { it.id == 1L })
+        assertFalse(viewModel.state.lastSaveWasEdit)
+    }
+
+    @Test
     fun loadPersonalOverallStatsMakesTheDerivedSummaryAvailableForProfile() = runBlocking {
         val dao = FakeCompletedMatchDao().apply {
             matches += completedMatch(id = 1, winner = "Player")
@@ -199,6 +316,26 @@ class MatchHeroSelectionViewModelTest {
             val removed = matches.removeAll { it.id == id }
             return if (removed) 1 else 0
         }
+
+        override suspend fun updateById(
+            id: Long,
+            playerHeroName: String,
+            opponentHeroName: String,
+            winner: String,
+            firstPlayer: String,
+            datePlayed: String,
+        ): Int {
+            val index = matches.indexOfFirst { it.id == id }
+            if (index == -1) return 0
+            matches[index] = matches[index].copy(
+                playerHeroName = playerHeroName,
+                opponentHeroName = opponentHeroName,
+                winner = winner,
+                firstPlayer = firstPlayer,
+                datePlayed = datePlayed,
+            )
+            return 1
+        }
     }
 
     private class BlockingCompletedMatchDao : CompletedMatchDao {
@@ -216,5 +353,14 @@ class MatchHeroSelectionViewModelTest {
         override suspend fun getHistory(): List<CompletedMatchEntity> = matches.toList()
 
         override suspend fun deleteById(id: Long): Int = 0
+
+        override suspend fun updateById(
+            id: Long,
+            playerHeroName: String,
+            opponentHeroName: String,
+            winner: String,
+            firstPlayer: String,
+            datePlayed: String,
+        ): Int = 0
     }
 }

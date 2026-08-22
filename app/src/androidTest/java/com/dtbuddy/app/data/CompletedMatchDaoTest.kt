@@ -50,6 +50,39 @@ class CompletedMatchDaoTest {
         assertEquals(listOf(third, first), dao.getHistory().map { it.id })
     }
 
+    @Test
+    fun updateByIdReplacesOnlyTheSelectedStoredMatch() = runBlocking {
+        val first = dao.insert(match(datePlayed = "2026-08-21", createdAtMillis = 10L))
+        val selected = dao.insert(match(datePlayed = "2026-08-21", createdAtMillis = 20L))
+
+        assertEquals(
+            1,
+            dao.updateById(
+                id = selected,
+                playerHeroName = "Moon Elf",
+                opponentHeroName = "Loki",
+                winner = "Opponent",
+                firstPlayer = "Player",
+                datePlayed = "2026-08-22",
+            ),
+        )
+
+        assertEquals(2, dao.getHistory().size)
+        assertEquals(
+            CompletedMatchEntity(
+                id = selected,
+                playerHeroName = "Moon Elf",
+                opponentHeroName = "Loki",
+                winner = "Opponent",
+                firstPlayer = "Player",
+                datePlayed = "2026-08-22",
+                createdAtMillis = 20L,
+            ),
+            dao.getHistory().first(),
+        )
+        assertEquals(first, dao.getHistory().last().id)
+    }
+
     private fun match(datePlayed: String, createdAtMillis: Long) = CompletedMatchEntity(
         playerHeroName = "Barbarian",
         opponentHeroName = "Moon Elf",

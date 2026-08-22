@@ -52,6 +52,7 @@ private const val winnerRoute = "winner"
 private const val firstPlayerRoute = "firstPlayer"
 private const val datePlayedRoute = "datePlayed"
 private const val summaryRoute = "summary"
+private const val editOverviewRoute = "editOverview"
 private const val savedMatchRoute = "savedMatch"
 private const val matchHistoryRoute = "matchHistory"
 
@@ -92,7 +93,13 @@ fun HeroSelectionScreen(viewModel: MatchHeroSelectionViewModel) {
             when (selectedDestination) {
                 MainDestination.LogMatch -> MatchLogFlow(viewModel)
                 MainDestination.Requests -> RequestsPlaceholder()
-                MainDestination.Profile -> ProfileDestination(viewModel)
+                MainDestination.Profile -> ProfileDestination(
+                    viewModel = viewModel,
+                    onEditRequested = { match ->
+                        viewModel.startEditing(match)
+                        selectedDestinationName = MainDestination.LogMatch.name
+                    },
+                )
                 MainDestination.GlobalStats -> GlobalStatsPlaceholder()
             }
         }
@@ -104,7 +111,10 @@ private fun MatchLogFlow(viewModel: MatchHeroSelectionViewModel) {
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
 
-    NavHost(navController = navController, startDestination = playerHeroRoute) {
+    NavHost(
+        navController = navController,
+        startDestination = if (viewModel.state.isEditing) editOverviewRoute else playerHeroRoute,
+    ) {
         composable(playerHeroRoute) {
             HeroPicker(
                 title = "Choose your hero",
@@ -112,7 +122,11 @@ private fun MatchLogFlow(viewModel: MatchHeroSelectionViewModel) {
                 selectedHeroName = viewModel.state.playerHeroName,
                 onHeroSelected = {
                     viewModel.selectPlayer(it)
-                    navController.navigate(opponentHeroRoute)
+                    if (viewModel.state.isEditing) {
+                        navController.popBackStack(editOverviewRoute, inclusive = false)
+                    } else {
+                        navController.navigate(opponentHeroRoute)
+                    }
                 },
             )
         }
@@ -124,10 +138,14 @@ private fun MatchLogFlow(viewModel: MatchHeroSelectionViewModel) {
                 HeroPicker(
                     title = "Choose opponent hero",
                     description = "You chose $playerHeroName. Now choose the opponent's hero.",
-                    selectedHeroName = null,
+                    selectedHeroName = viewModel.state.opponentHeroName,
                     onHeroSelected = {
                         viewModel.selectOpponent(it)
-                        navController.navigate(winnerRoute)
+                        if (viewModel.state.isEditing) {
+                            navController.popBackStack(editOverviewRoute, inclusive = false)
+                        } else {
+                            navController.navigate(winnerRoute)
+                        }
                     },
                     onBack = navController::popBackStack,
                 )
@@ -145,13 +163,14 @@ private fun MatchLogFlow(viewModel: MatchHeroSelectionViewModel) {
                     opponentHeroName = state.opponentHeroName,
                     playerChoiceLabel = "You won",
                     opponentChoiceLabel = "Opponent won",
+                    selectedParticipant = state.winner,
                     onPlayerChosen = {
                         viewModel.selectWinner(MatchParticipant.Player)
-                        navController.navigate(firstPlayerRoute)
+                        navigateAfterParticipantChoice(viewModel, navController, firstPlayerRoute)
                     },
                     onOpponentChosen = {
                         viewModel.selectWinner(MatchParticipant.Opponent)
-                        navController.navigate(firstPlayerRoute)
+                        navigateAfterParticipantChoice(viewModel, navController, firstPlayerRoute)
                     },
                     onBack = navController::popBackStack,
                 )
@@ -170,15 +189,24 @@ private fun MatchLogFlow(viewModel: MatchHeroSelectionViewModel) {
                     winnerText = "Winner: ${participantLabel(state.winner, state.playerHeroName, state.opponentHeroName)}",
                     playerChoiceLabel = "You went first",
                     opponentChoiceLabel = "Opponent went first",
+                    selectedParticipant = state.firstPlayer,
                     onPlayerChosen = {
                         viewModel.selectFirstPlayer(MatchParticipant.Player)
-                        viewModel.ensureDatePlayed(LocalDate.now())
-                        navController.navigate(datePlayedRoute)
+                        if (viewModel.state.isEditing) {
+                            navController.popBackStack(editOverviewRoute, inclusive = false)
+                        } else {
+                            viewModel.ensureDatePlayed(LocalDate.now())
+                            navController.navigate(datePlayedRoute)
+                        }
                     },
                     onOpponentChosen = {
                         viewModel.selectFirstPlayer(MatchParticipant.Opponent)
-                        viewModel.ensureDatePlayed(LocalDate.now())
-                        navController.navigate(datePlayedRoute)
+                        if (viewModel.state.isEditing) {
+                            navController.popBackStack(editOverviewRoute, inclusive = false)
+                        } else {
+                            viewModel.ensureDatePlayed(LocalDate.now())
+                            navController.navigate(datePlayedRoute)
+                        }
                     },
                     onBack = navController::popBackStack,
                 )
@@ -197,7 +225,13 @@ private fun MatchLogFlow(viewModel: MatchHeroSelectionViewModel) {
                 DatePlayedChoice(
                     datePlayed = state.datePlayed ?: LocalDate.now(),
                     onDateSelected = viewModel::selectDatePlayed,
-                    onContinue = { navController.navigate(summaryRoute) },
+                    onContinue = {
+                        if (viewModel.state.isEditing) {
+                            navController.popBackStack(editOverviewRoute, inclusive = false)
+                        } else {
+                            navController.navigate(summaryRoute)
+                        }
+                    },
                     onBack = navController::popBackStack,
                 )
             }
@@ -220,6 +254,7 @@ private fun MatchLogFlow(viewModel: MatchHeroSelectionViewModel) {
                     firstPlayer = state.firstPlayer,
                     datePlayed = state.datePlayed,
                     isSaving = state.isSaving,
+                    isEditing = state.isEditing,
                     onSave = {
                         coroutineScope.launch {
                             if (viewModel.saveMatch()) {
@@ -233,11 +268,48 @@ private fun MatchLogFlow(viewModel: MatchHeroSelectionViewModel) {
                 )
             }
         }
+        composable(editOverviewRoute) {
+            val state = viewModel.state
+            if (
+                !state.isEditing ||
+                state.playerHeroName == null ||
+                state.opponentHeroName == null ||
+                state.winner == null ||
+                state.firstPlayer == null ||
+                state.datePlayed == null
+            ) {
+                ReturnToPlayerHeroStep(navController)
+            } else {
+                EditMatchOverview(
+                    playerHeroName = state.playerHeroName,
+                    opponentHeroName = state.opponentHeroName,
+                    winner = state.winner,
+                    firstPlayer = state.firstPlayer,
+                    datePlayed = state.datePlayed,
+                    isSaving = state.isSaving,
+                    onPlayerHero = { navController.navigate(playerHeroRoute) },
+                    onOpponentHero = { navController.navigate(opponentHeroRoute) },
+                    onWinner = { navController.navigate(winnerRoute) },
+                    onFirstPlayer = { navController.navigate(firstPlayerRoute) },
+                    onDatePlayed = { navController.navigate(datePlayedRoute) },
+                    onSave = {
+                        coroutineScope.launch {
+                            if (viewModel.saveMatch()) {
+                                navController.navigate(savedMatchRoute) {
+                                    popUpTo(editOverviewRoute) { inclusive = true }
+                                }
+                            }
+                        }
+                    },
+                )
+            }
+        }
         composable(savedMatchRoute) {
             if (viewModel.state.completedMatchDraftOrNull() == null) {
                 ReturnToPlayerHeroStep(navController)
             } else {
                 SavedMatchConfirmation(
+                    wasEdited = viewModel.state.lastSaveWasEdit,
                     onViewMatchHistory = { navController.navigate(matchHistoryRoute) },
                     onLogAnotherMatch = {
                         viewModel.startNewMatch()
@@ -257,11 +329,29 @@ private fun MatchLogFlow(viewModel: MatchHeroSelectionViewModel) {
                 hasLoadedHistory = viewModel.state.hasLoadedHistory,
                 onBack = navController::popBackStack,
                 pendingDeletionMatch = viewModel.state.pendingDeletionMatch,
+                onEditRequested = { match ->
+                    viewModel.startEditing(match)
+                    navController.navigate(editOverviewRoute) {
+                        popUpTo(editOverviewRoute) { inclusive = true }
+                    }
+                },
                 onDeleteRequested = viewModel::requestMatchDeletion,
                 onDeleteCancelled = viewModel::cancelMatchDeletion,
                 onDeleteConfirmed = viewModel::confirmMatchDeletion,
             )
         }
+    }
+}
+
+private fun navigateAfterParticipantChoice(
+    viewModel: MatchHeroSelectionViewModel,
+    navController: NavHostController,
+    normalNextRoute: String,
+) {
+    if (viewModel.state.isEditing) {
+        navController.popBackStack(editOverviewRoute, inclusive = false)
+    } else {
+        navController.navigate(normalNextRoute)
     }
 }
 
@@ -342,7 +432,10 @@ private fun PlaceholderDestination(title: String, message: String) {
 }
 
 @Composable
-private fun ProfileDestination(viewModel: MatchHeroSelectionViewModel) {
+private fun ProfileDestination(
+    viewModel: MatchHeroSelectionViewModel,
+    onEditRequested: (CompletedMatchEntity) -> Unit,
+) {
     var profilePageName by rememberSaveable { mutableStateOf(ProfilePage.Overview.name) }
     var selectedHeroName by rememberSaveable { mutableStateOf<String?>(null) }
     val profilePage = ProfilePage.valueOf(profilePageName)
@@ -358,6 +451,7 @@ private fun ProfileDestination(viewModel: MatchHeroSelectionViewModel) {
                 hasLoadedHistory = viewModel.state.hasLoadedHistory,
                 onBack = { profilePageName = ProfilePage.Overview.name },
                 pendingDeletionMatch = viewModel.state.pendingDeletionMatch,
+                onEditRequested = onEditRequested,
                 onDeleteRequested = viewModel::requestMatchDeletion,
                 onDeleteCancelled = viewModel::cancelMatchDeletion,
                 onDeleteConfirmed = viewModel::confirmMatchDeletion,
@@ -662,6 +756,7 @@ private fun ParticipantChoice(
     onOpponentChosen: () -> Unit,
     onBack: () -> Unit,
     winnerText: String? = null,
+    selectedParticipant: MatchParticipant? = null,
 ) {
     Column(
         modifier = Modifier
@@ -679,11 +774,65 @@ private fun ParticipantChoice(
         if (winnerText != null) {
             Text(winnerText, style = MaterialTheme.typography.bodyLarge)
         }
+        if (selectedParticipant != null) {
+            Text(
+                "Selected: ${participantLabel(selectedParticipant, playerHeroName, opponentHeroName)}",
+                style = MaterialTheme.typography.titleMedium,
+            )
+        }
         Button(onClick = onPlayerChosen, modifier = Modifier.fillMaxWidth()) {
             Text(playerChoiceLabel)
         }
         Button(onClick = onOpponentChosen, modifier = Modifier.fillMaxWidth()) {
             Text(opponentChoiceLabel)
+        }
+    }
+}
+
+@Composable
+private fun EditMatchOverview(
+    playerHeroName: String,
+    opponentHeroName: String,
+    winner: MatchParticipant,
+    firstPlayer: MatchParticipant,
+    datePlayed: LocalDate,
+    isSaving: Boolean,
+    onPlayerHero: () -> Unit,
+    onOpponentHero: () -> Unit,
+    onWinner: () -> Unit,
+    onFirstPlayer: () -> Unit,
+    onDatePlayed: () -> Unit,
+    onSave: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text("Edit match", style = MaterialTheme.typography.headlineMedium)
+        Text("Tap only the detail you want to change.", style = MaterialTheme.typography.bodyLarge)
+        Button(onClick = onPlayerHero, modifier = Modifier.fillMaxWidth()) {
+            Text("Your hero: $playerHeroName")
+        }
+        Button(onClick = onOpponentHero, modifier = Modifier.fillMaxWidth()) {
+            Text("Opponent hero: $opponentHeroName")
+        }
+        Button(onClick = onWinner, modifier = Modifier.fillMaxWidth()) {
+            Text("Winner: ${participantLabel(winner, playerHeroName, opponentHeroName)}")
+        }
+        Button(onClick = onFirstPlayer, modifier = Modifier.fillMaxWidth()) {
+            Text("First player: ${participantLabel(firstPlayer, playerHeroName, opponentHeroName)}")
+        }
+        Button(onClick = onDatePlayed, modifier = Modifier.fillMaxWidth()) {
+            Text("Date played: ${datePlayed.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))}")
+        }
+        Button(
+            onClick = onSave,
+            enabled = !isSaving,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(if (isSaving) "Saving changes…" else "Save changes")
         }
     }
 }
@@ -696,6 +845,7 @@ private fun MatchSummary(
     firstPlayer: MatchParticipant,
     datePlayed: LocalDate,
     isSaving: Boolean,
+    isEditing: Boolean,
     onSave: () -> Unit,
     onBack: () -> Unit,
 ) {
@@ -724,7 +874,11 @@ private fun MatchSummary(
             style = MaterialTheme.typography.bodyLarge,
         )
         Text(
-            "Check the details, then save this completed match on your device.",
+            if (isEditing) {
+                "Check the revised details, then save these changes on your device."
+            } else {
+                "Check the details, then save this completed match on your device."
+            },
             style = MaterialTheme.typography.bodyLarge,
         )
         Button(
@@ -732,13 +886,14 @@ private fun MatchSummary(
             enabled = !isSaving,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text(if (isSaving) "Saving match…" else "Save match")
+            Text(if (isSaving) "Saving changes…" else if (isEditing) "Save changes" else "Save match")
         }
     }
 }
 
 @Composable
 private fun SavedMatchConfirmation(
+    wasEdited: Boolean,
     onViewMatchHistory: () -> Unit,
     onLogAnotherMatch: () -> Unit,
 ) {
@@ -748,9 +903,9 @@ private fun SavedMatchConfirmation(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("Match saved", style = MaterialTheme.typography.headlineMedium)
+        Text(if (wasEdited) "Match changes saved" else "Match saved", style = MaterialTheme.typography.headlineMedium)
         Text(
-            "This completed match is saved on this device.",
+            if (wasEdited) "This completed match was updated on this device." else "This completed match is saved on this device.",
             style = MaterialTheme.typography.bodyLarge,
         )
         Button(onClick = onViewMatchHistory, modifier = Modifier.fillMaxWidth()) {
@@ -768,6 +923,7 @@ private fun MatchHistory(
     hasLoadedHistory: Boolean,
     onBack: () -> Unit,
     pendingDeletionMatch: CompletedMatchEntity?,
+    onEditRequested: (CompletedMatchEntity) -> Unit,
     onDeleteRequested: (CompletedMatchEntity) -> Unit,
     onDeleteCancelled: () -> Unit,
     onDeleteConfirmed: suspend () -> Boolean,
@@ -797,7 +953,7 @@ private fun MatchHistory(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(matches, key = { it.id }) { match ->
-                    MatchHistoryRow(match, onDeleteRequested)
+                    MatchHistoryRow(match, onEditRequested, onDeleteRequested)
                 }
             }
         }
@@ -814,6 +970,7 @@ private fun MatchHistory(
 @Composable
 private fun MatchHistoryRow(
     match: CompletedMatchEntity,
+    onEditRequested: (CompletedMatchEntity) -> Unit,
     onDeleteRequested: (CompletedMatchEntity) -> Unit,
 ) {
     val datePlayed = LocalDate.parse(match.datePlayed)
@@ -830,6 +987,9 @@ private fun MatchHistoryRow(
         Text("Your hero: ${match.playerHeroName}", style = MaterialTheme.typography.bodyLarge)
         Text("Opponent hero: ${match.opponentHeroName}", style = MaterialTheme.typography.bodyLarge)
         Text(result, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+        Button(onClick = { onEditRequested(match) }, modifier = Modifier.fillMaxWidth()) {
+            Text("Edit match")
+        }
         Button(onClick = { onDeleteRequested(match) }, modifier = Modifier.fillMaxWidth()) {
             Text("Delete match")
         }
