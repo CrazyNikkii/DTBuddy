@@ -24,34 +24,49 @@ data class MatchHeroSelectionState(
     val personalHeroStats: List<PersonalHeroStats> = emptyList(),
     val personalHeroTurnOrderDetail: PersonalHeroTurnOrderDetail? = null,
     val pendingDeletionMatch: CompletedMatchEntity? = null,
+    val editingMatchId: Long? = null,
+    val editingOriginalDatePlayed: LocalDate? = null,
+    val lastSaveWasEdit: Boolean = false,
 ) {
-    fun selectPlayer(hero: Hero): MatchHeroSelectionState = copy(
-        playerHeroName = hero.name,
-        opponentHeroName = null,
-        winner = null,
-        firstPlayer = null,
-        datePlayed = null,
-    )
+    val isEditing: Boolean get() = editingMatchId != null
 
-    fun selectOpponent(hero: Hero): MatchHeroSelectionState = copy(
-        opponentHeroName = hero.name,
-        winner = null,
-        firstPlayer = null,
-        datePlayed = null,
-    )
+    fun selectPlayer(hero: Hero): MatchHeroSelectionState = if (isEditing) {
+        copy(playerHeroName = hero.name)
+    } else {
+        copy(playerHeroName = hero.name, opponentHeroName = null, winner = null, firstPlayer = null, datePlayed = null)
+    }
 
-    fun selectWinner(participant: MatchParticipant): MatchHeroSelectionState = copy(
-        winner = participant,
-        firstPlayer = null,
-        datePlayed = null,
-    )
+    fun selectOpponent(hero: Hero): MatchHeroSelectionState = if (isEditing) {
+        copy(opponentHeroName = hero.name)
+    } else {
+        copy(opponentHeroName = hero.name, winner = null, firstPlayer = null, datePlayed = null)
+    }
 
-    fun selectFirstPlayer(participant: MatchParticipant): MatchHeroSelectionState = copy(
-        firstPlayer = participant,
-        datePlayed = null,
-    )
+    fun selectWinner(participant: MatchParticipant): MatchHeroSelectionState = if (isEditing) {
+        copy(winner = participant)
+    } else {
+        copy(winner = participant, firstPlayer = null, datePlayed = null)
+    }
+
+    fun selectFirstPlayer(participant: MatchParticipant): MatchHeroSelectionState = if (isEditing) {
+        copy(firstPlayer = participant)
+    } else {
+        copy(firstPlayer = participant, datePlayed = null)
+    }
 
     fun selectDatePlayed(date: LocalDate): MatchHeroSelectionState = copy(datePlayed = date)
+
+    fun startEditing(match: CompletedMatchEntity): MatchHeroSelectionState = copy(
+        playerHeroName = match.playerHeroName,
+        opponentHeroName = match.opponentHeroName,
+        winner = MatchParticipant.valueOf(match.winner),
+        firstPlayer = MatchParticipant.valueOf(match.firstPlayer),
+        datePlayed = LocalDate.parse(match.datePlayed),
+        editingMatchId = match.id,
+        editingOriginalDatePlayed = LocalDate.parse(match.datePlayed),
+        lastSaveWasEdit = false,
+        pendingDeletionMatch = null,
+    )
 
     fun completedMatchDraftOrNull(): com.dtbuddy.app.data.CompletedMatchDraft? {
         val playerHero = playerHeroName ?: return null

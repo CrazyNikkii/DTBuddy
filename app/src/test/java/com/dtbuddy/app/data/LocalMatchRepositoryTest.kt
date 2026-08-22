@@ -69,6 +69,50 @@ class LocalMatchRepositoryTest {
     }
 
     @Test
+    fun updateReplacesOnlyTheSelectedMatchWithoutChangingItsHistoryTieBreakerOrAddingARow() = runBlocking {
+        val dao = FakeCompletedMatchDao().apply {
+            matches += savedMatch(id = 1, winner = "Player", firstPlayer = "Opponent").copy(createdAtMillis = 10L)
+            matches += savedMatch(id = 2, winner = "Opponent").copy(createdAtMillis = 20L)
+        }
+        val repository = LocalMatchRepository(dao)
+
+        assertEquals(
+            true,
+            repository.update(
+                1,
+                CompletedMatchDraft(
+                    playerHeroName = "Moon Elf",
+                    opponentHeroName = "Loki",
+                    winner = MatchParticipant.Opponent,
+                    firstPlayer = MatchParticipant.Player,
+                    datePlayed = LocalDate.of(2026, 8, 22),
+                ),
+            ),
+        )
+
+        assertEquals(2, dao.matches.size)
+        assertEquals(
+            savedMatch(
+                id = 1,
+                playerHeroName = "Moon Elf",
+                opponentHeroName = "Loki",
+                winner = "Opponent",
+                firstPlayer = "Player",
+            ).copy(datePlayed = "2026-08-22", createdAtMillis = 10L),
+            dao.matches.single { it.id == 1L },
+        )
+        assertEquals(listOf(1L, 2L), repository.getHistory().map { it.id })
+        assertEquals(PersonalOverallStats(gamesPlayed = 2, wins = 0, losses = 2), repository.getPersonalOverallStats())
+        assertEquals(
+            listOf(
+                PersonalHeroStats("Barbarian", 1, 0, 1),
+                PersonalHeroStats("Moon Elf", 1, 0, 1),
+            ),
+            repository.getPersonalHeroStats(),
+        )
+    }
+
+    @Test
     fun personalOverallStatsHandleEmptyAllWinAllLossAndMixedRecords() = runBlocking {
         val dao = FakeCompletedMatchDao()
         val repository = LocalMatchRepository(dao)
@@ -258,6 +302,26 @@ class LocalMatchRepositoryTest {
         override suspend fun deleteById(id: Long): Int {
             val removed = matches.removeAll { it.id == id }
             return if (removed) 1 else 0
+        }
+
+        override suspend fun updateById(
+            id: Long,
+            playerHeroName: String,
+            opponentHeroName: String,
+            winner: String,
+            firstPlayer: String,
+            datePlayed: String,
+        ): Int {
+            val index = matches.indexOfFirst { it.id == id }
+            if (index == -1) return 0
+            matches[index] = matches[index].copy(
+                playerHeroName = playerHeroName,
+                opponentHeroName = opponentHeroName,
+                winner = winner,
+                firstPlayer = firstPlayer,
+                datePlayed = datePlayed,
+            )
+            return 1
         }
     }
 }

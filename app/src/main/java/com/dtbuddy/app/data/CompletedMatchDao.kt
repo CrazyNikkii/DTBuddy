@@ -15,4 +15,24 @@ interface CompletedMatchDao {
 
     @Query("DELETE FROM completed_matches WHERE id = :id")
     suspend fun deleteById(id: Long): Int
+
+    @Query(
+        """
+        UPDATE completed_matches
+        SET playerHeroName = :playerHeroName,
+            opponentHeroName = :opponentHeroName,
+            winner = :winner,
+            firstPlayer = :firstPlayer,
+            datePlayed = :datePlayed
+        WHERE id = :id
+        """,
+    )
+    suspend fun updateById(
+        id: Long,
+        playerHeroName: String,
+        opponentHeroName: String,
+        winner: String,
+        firstPlayer: String,
+        datePlayed: String,
+    ): Int
 }
