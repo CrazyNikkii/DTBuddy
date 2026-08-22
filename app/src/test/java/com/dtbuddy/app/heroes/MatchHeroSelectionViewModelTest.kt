@@ -80,6 +80,35 @@ class MatchHeroSelectionViewModelTest {
     }
 
     @Test
+    fun cancellingMatchDeletionKeepsTheSelectedMatch() = runBlocking {
+        val match = completedMatch(id = 1, winner = "Player")
+        val dao = FakeCompletedMatchDao().apply { matches += match }
+        val viewModel = MatchHeroSelectionViewModel(LocalMatchRepository(dao))
+
+        viewModel.requestMatchDeletion(match)
+        viewModel.cancelMatchDeletion()
+
+        assertEquals(null, viewModel.state.pendingDeletionMatch)
+        assertEquals(listOf(match), dao.matches)
+    }
+
+    @Test
+    fun confirmedMatchDeletionRemovesOnlyRequestedMatchAndRefreshesHistory() = runBlocking {
+        val first = completedMatch(id = 1, winner = "Player")
+        val selected = completedMatch(id = 2, winner = "Opponent")
+        val sameLookingMatch = completedMatch(id = 3, winner = "Player")
+        val dao = FakeCompletedMatchDao().apply { matches += listOf(first, selected, sameLookingMatch) }
+        val viewModel = MatchHeroSelectionViewModel(LocalMatchRepository(dao))
+
+        viewModel.requestMatchDeletion(selected)
+
+        assertTrue(viewModel.confirmMatchDeletion())
+        assertEquals(null, viewModel.state.pendingDeletionMatch)
+        assertTrue(viewModel.state.hasLoadedHistory)
+        assertEquals(listOf(first, sameLookingMatch), viewModel.state.historyMatches)
+    }
+
+    @Test
     fun loadPersonalOverallStatsMakesTheDerivedSummaryAvailableForProfile() = runBlocking {
         val dao = FakeCompletedMatchDao().apply {
             matches += completedMatch(id = 1, winner = "Player")
@@ -165,6 +194,11 @@ class MatchHeroSelectionViewModelTest {
         }
 
         override suspend fun getHistory(): List<CompletedMatchEntity> = matches.toList()
+
+        override suspend fun deleteById(id: Long): Int {
+            val removed = matches.removeAll { it.id == id }
+            return if (removed) 1 else 0
+        }
     }
 
     private class BlockingCompletedMatchDao : CompletedMatchDao {
@@ -180,5 +214,7 @@ class MatchHeroSelectionViewModelTest {
         }
 
         override suspend fun getHistory(): List<CompletedMatchEntity> = matches.toList()
+
+        override suspend fun deleteById(id: Long): Int = 0
     }
 }

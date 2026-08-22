@@ -60,6 +60,24 @@ class MatchHeroSelectionViewModel(
         )
     }
 
+    fun requestMatchDeletion(match: com.dtbuddy.app.data.CompletedMatchEntity) {
+        state = state.copy(pendingDeletionMatch = match)
+    }
+
+    fun cancelMatchDeletion() {
+        state = state.copy(pendingDeletionMatch = null)
+    }
+
+    suspend fun confirmMatchDeletion(): Boolean {
+        val match = state.pendingDeletionMatch ?: return false
+        val deleted = localMatchRepository.delete(match.id)
+        state = state.copy(pendingDeletionMatch = null)
+        if (deleted) {
+            loadHistory()
+        }
+        return deleted
+    }
+
     suspend fun loadPersonalOverallStats() {
         state = state.copy(
             personalOverallStats = localMatchRepository.getPersonalOverallStats(),

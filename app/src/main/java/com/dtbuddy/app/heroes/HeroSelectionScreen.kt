@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -19,6 +20,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -254,6 +256,10 @@ private fun MatchLogFlow(viewModel: MatchHeroSelectionViewModel) {
                 matches = viewModel.state.historyMatches,
                 hasLoadedHistory = viewModel.state.hasLoadedHistory,
                 onBack = navController::popBackStack,
+                pendingDeletionMatch = viewModel.state.pendingDeletionMatch,
+                onDeleteRequested = viewModel::requestMatchDeletion,
+                onDeleteCancelled = viewModel::cancelMatchDeletion,
+                onDeleteConfirmed = viewModel::confirmMatchDeletion,
             )
         }
     }
@@ -351,6 +357,10 @@ private fun ProfileDestination(viewModel: MatchHeroSelectionViewModel) {
                 matches = viewModel.state.historyMatches,
                 hasLoadedHistory = viewModel.state.hasLoadedHistory,
                 onBack = { profilePageName = ProfilePage.Overview.name },
+                pendingDeletionMatch = viewModel.state.pendingDeletionMatch,
+                onDeleteRequested = viewModel::requestMatchDeletion,
+                onDeleteCancelled = viewModel::cancelMatchDeletion,
+                onDeleteConfirmed = viewModel::confirmMatchDeletion,
             )
         }
         ProfilePage.Heroes -> {
@@ -757,7 +767,12 @@ private fun MatchHistory(
     matches: List<CompletedMatchEntity>,
     hasLoadedHistory: Boolean,
     onBack: () -> Unit,
+    pendingDeletionMatch: CompletedMatchEntity?,
+    onDeleteRequested: (CompletedMatchEntity) -> Unit,
+    onDeleteCancelled: () -> Unit,
+    onDeleteConfirmed: suspend () -> Boolean,
 ) {
+    val coroutineScope = rememberCoroutineScope()
     Column(modifier = Modifier.fillMaxSize()) {
         Button(
             onClick = onBack,
@@ -782,15 +797,25 @@ private fun MatchHistory(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(matches, key = { it.id }) { match ->
-                    MatchHistoryRow(match)
+                    MatchHistoryRow(match, onDeleteRequested)
                 }
             }
         }
     }
+    pendingDeletionMatch?.let { match ->
+        DeleteMatchConfirmation(
+            match = match,
+            onCancel = onDeleteCancelled,
+            onConfirm = { coroutineScope.launch { onDeleteConfirmed() } },
+        )
+    }
 }
 
 @Composable
-private fun MatchHistoryRow(match: CompletedMatchEntity) {
+private fun MatchHistoryRow(
+    match: CompletedMatchEntity,
+    onDeleteRequested: (CompletedMatchEntity) -> Unit,
+) {
     val datePlayed = LocalDate.parse(match.datePlayed)
         .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
     val result = if (match.winner == MatchParticipant.Player.name) "Won" else "Lost"
@@ -805,8 +830,46 @@ private fun MatchHistoryRow(match: CompletedMatchEntity) {
         Text("Your hero: ${match.playerHeroName}", style = MaterialTheme.typography.bodyLarge)
         Text("Opponent hero: ${match.opponentHeroName}", style = MaterialTheme.typography.bodyLarge)
         Text(result, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+        Button(onClick = { onDeleteRequested(match) }, modifier = Modifier.fillMaxWidth()) {
+            Text("Delete match")
+        }
     }
     HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
+}
+
+@Composable
+private fun DeleteMatchConfirmation(
+    match: CompletedMatchEntity,
+    onCancel: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    val datePlayed = LocalDate.parse(match.datePlayed)
+        .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
+    val result = if (match.winner == MatchParticipant.Player.name) "Won" else "Lost"
+
+    AlertDialog(
+        onDismissRequest = onCancel,
+        title = { Text("Delete match?") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(datePlayed)
+                Text("Your hero: ${match.playerHeroName}")
+                Text("Opponent hero: ${match.opponentHeroName}")
+                Text(result, fontWeight = FontWeight.Bold)
+                Text("This permanently removes the match from this device.")
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Delete match")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onCancel) {
+                Text("Cancel")
+            }
+        },
+    )
 }
 
 private fun participantLabel(

@@ -23,6 +23,7 @@ data class MatchHeroSelectionState(
     val personalOverallStats: PersonalOverallStats = PersonalOverallStats(),
     val personalHeroStats: List<PersonalHeroStats> = emptyList(),
     val personalHeroTurnOrderDetail: PersonalHeroTurnOrderDetail? = null,
+    val pendingDeletionMatch: CompletedMatchEntity? = null,
 ) {
     fun selectPlayer(hero: Hero): MatchHeroSelectionState = copy(
         playerHeroName = hero.name,

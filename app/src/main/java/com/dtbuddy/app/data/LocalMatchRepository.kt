@@ -77,6 +77,8 @@ class LocalMatchRepository(
 
     suspend fun getHistory(): List<CompletedMatchEntity> = completedMatchDao.getHistory()
 
+    suspend fun delete(matchId: Long): Boolean = completedMatchDao.deleteById(matchId) == 1
+
     suspend fun getPersonalOverallStats(): PersonalOverallStats {
         val matches = completedMatchDao.getHistory()
         val wins = matches.count { it.winner == "Player" }
