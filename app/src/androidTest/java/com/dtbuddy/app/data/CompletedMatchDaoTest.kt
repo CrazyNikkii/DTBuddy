@@ -135,7 +135,7 @@ class CompletedMatchDaoTest {
         versionOneDatabase.close()
 
         val migratedDatabase = Room.databaseBuilder(context, AppDatabase::class.java, legacyDatabaseName)
-            .addMigrations(AppDatabase.MIGRATION_1_2)
+            .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
             .build()
 
         val migratedMatch = migratedDatabase.completedMatchDao().getHistory().single()
@@ -146,6 +146,7 @@ class CompletedMatchDaoTest {
         assertEquals("2026-08-21", migratedMatch.datePlayed)
         assertEquals(10L, migratedMatch.createdAtMillis)
         assertEquals(null, migratedMatch.note)
+        assertEquals(emptyList<FavouriteHeroEntity>(), migratedDatabase.favouriteHeroDao().getAll())
         migratedDatabase.close()
     }
 

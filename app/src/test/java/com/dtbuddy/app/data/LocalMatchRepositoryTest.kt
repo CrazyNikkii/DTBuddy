@@ -1,12 +1,31 @@
 package com.dtbuddy.app.data
 
 import com.dtbuddy.app.heroes.MatchParticipant
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import java.time.LocalDate
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class LocalMatchRepositoryTest {
+    @Test
+    fun favouritesAreOrderedLimitedAndDoNotAffectMatchStatistics() = runBlocking {
+        val matchDao = FakeCompletedMatchDao().apply { matches += savedMatch(id = 1, winner = "Player") }
+        val favouriteDao = FakeFavouriteHeroDao()
+        val repository = LocalMatchRepository(matchDao, favouriteHeroDao = favouriteDao)
+
+        assertTrue(repository.setFavouriteHero(0, "Barbarian"))
+        assertTrue(repository.setFavouriteHero(1, "Moon Elf"))
+        assertTrue(repository.setFavouriteHero(2, "Loki"))
+        assertFalse(repository.setFavouriteHero(3, "Thor"))
+        assertFalse(repository.setFavouriteHero(1, "Loki"))
+        assertFalse(repository.setFavouriteHero(1, "Not a hero"))
+        assertTrue(repository.setFavouriteHero(0, "Thor"))
+
+        assertEquals(listOf("Thor", "Moon Elf", "Loki"), repository.getFavouriteHeroNames())
+        assertEquals(PersonalOverallStats(gamesPlayed = 1, wins = 1, losses = 0), repository.getPersonalOverallStats())
+    }
     @Test
     fun saveStoresTheFiveSelectedValuesOnce() = runBlocking {
         val dao = FakeCompletedMatchDao()
@@ -352,6 +371,20 @@ class LocalMatchRepositoryTest {
                 note = note,
             )
             return 1
+        }
+    }
+
+    private class FakeFavouriteHeroDao : FavouriteHeroDao() {
+        private var favourites = emptyList<FavouriteHeroEntity>()
+
+        override suspend fun getAll(): List<FavouriteHeroEntity> = favourites
+
+        override suspend fun insert(favourite: FavouriteHeroEntity) {
+            favourites = favourites + favourite
+        }
+
+        override suspend fun deleteAll() {
+            favourites = emptyList()
         }
     }
 }
