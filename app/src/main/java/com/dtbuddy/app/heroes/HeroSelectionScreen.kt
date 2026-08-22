@@ -40,6 +40,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavHostController
 import com.dtbuddy.app.data.CompletedMatchEntity
+import com.dtbuddy.app.data.MAXIMUM_FAVOURITES
 import com.dtbuddy.app.data.PersonalHeroMatchupStats
 import com.dtbuddy.app.data.PersonalHeroStats
 import com.dtbuddy.app.data.PersonalHeroTurnOrderDetail
@@ -71,6 +72,8 @@ private enum class ProfilePage {
     Heroes,
     HeroDetail,
     History,
+    Favourites,
+    FavouritePicker,
 }
 
 @Composable
@@ -188,6 +191,7 @@ private fun MatchLogFlow(
 ) {
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
+    LaunchedEffect(Unit) { viewModel.loadFavouriteHeroes() }
 
     NavHost(
         navController = navController,
@@ -201,6 +205,7 @@ private fun MatchLogFlow(
                 title = "Choose your hero",
                 description = "Start your match log by choosing the hero you played.",
                 selectedHeroName = viewModel.state.playerHeroName,
+                favouriteHeroes = favouriteHeroes(viewModel.state.favouriteHeroNames),
                 onHeroSelected = {
                     viewModel.selectPlayer(it)
                     if (viewModel.state.isEditing) {
@@ -574,6 +579,9 @@ private fun ProfileDestination(
 ) {
     var profilePageName by rememberSaveable { mutableStateOf(ProfilePage.Overview.name) }
     var selectedHeroName by rememberSaveable { mutableStateOf<String?>(null) }
+    var favouriteSlotIndex by rememberSaveable { mutableStateOf<Int?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
     val profilePage = ProfilePage.valueOf(profilePageName)
 
     LaunchedEffect(showHistoryOnEntry) {
@@ -584,6 +592,41 @@ private fun ProfileDestination(
     }
 
     when (profilePage) {
+        ProfilePage.FavouritePicker -> {
+            val slotIndex = favouriteSlotIndex
+            if (slotIndex == null) {
+                LaunchedEffect(Unit) { profilePageName = ProfilePage.Favourites.name }
+                return
+            }
+            BackHandler { profilePageName = ProfilePage.Favourites.name }
+            HeroPicker(
+                title = "Choose ${favouriteSlotLabel(slotIndex)} favourite",
+                description = "Choose the hero for this favourite slot.",
+                selectedHeroName = null,
+                onHeroSelected = { hero ->
+                    coroutineScope.launch {
+                        if (viewModel.setFavouriteHero(slotIndex, hero)) {
+                            profilePageName = ProfilePage.Favourites.name
+                        } else {
+                            Toast.makeText(context, "Choose a different hero for each favourite slot.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                },
+                onBack = { profilePageName = ProfilePage.Favourites.name },
+            )
+        }
+        ProfilePage.Favourites -> {
+            BackHandler { profilePageName = ProfilePage.Overview.name }
+            LaunchedEffect(Unit) { viewModel.loadFavouriteHeroes() }
+            FavouriteHeroesScreen(
+                heroNames = viewModel.state.favouriteHeroNames,
+                onBack = { profilePageName = ProfilePage.Overview.name },
+                onSlotSelected = { slotIndex ->
+                    favouriteSlotIndex = slotIndex
+                    profilePageName = ProfilePage.FavouritePicker.name
+                },
+            )
+        }
         ProfilePage.History -> {
             BackHandler { profilePageName = ProfilePage.Overview.name }
             LaunchedEffect(Unit) {
@@ -660,6 +703,12 @@ private fun ProfileDestination(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text("Heroes")
+                }
+                Button(
+                    onClick = { profilePageName = ProfilePage.Favourites.name },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Favourite heroes")
                 }
                 Button(
                     onClick = { profilePageName = ProfilePage.History.name },
@@ -827,6 +876,7 @@ private fun HeroPicker(
     title: String,
     description: String,
     selectedHeroName: String?,
+    favouriteHeroes: List<Hero> = emptyList(),
     onHeroSelected: (Hero) -> Unit,
     onBack: (() -> Unit)? = null,
 ) {
@@ -860,6 +910,17 @@ private fun HeroPicker(
                 style = MaterialTheme.typography.titleMedium,
             )
         }
+        if (favouriteHeroes.isNotEmpty()) {
+            Text(
+                text = "Favourites",
+                modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 8.dp),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
+            favouriteHeroes.forEach { hero ->
+                HeroRow(hero, hero.name == selectedHeroName, onHeroSelected)
+            }
+        }
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
@@ -869,7 +930,6 @@ private fun HeroPicker(
             label = { Text("Search heroes") },
             singleLine = true,
         )
-
         if (isSearching && heroes.isEmpty()) {
             Text(
                 text = "No heroes match \"${query.trim()}\".",
@@ -882,6 +942,7 @@ private fun HeroPicker(
                 groupResults = !isSearching,
                 selectedHeroName = selectedHeroName,
                 onHeroSelected = onHeroSelected,
+                modifier = Modifier.weight(1f),
             )
         }
     }
@@ -1211,8 +1272,10 @@ private fun HeroList(
     groupResults: Boolean,
     selectedHeroName: String?,
     onHeroSelected: (Hero) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     LazyColumn(
+        modifier = modifier,
         contentPadding = PaddingValues(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -1237,6 +1300,48 @@ private fun HeroList(
             }
         }
     }
+}
+
+@Composable
+private fun FavouriteHeroesScreen(
+    heroNames: List<String>,
+    onBack: () -> Unit,
+    onSlotSelected: (Int) -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Button(onClick = onBack) { Text("Back") }
+        Text("Favourite heroes", style = MaterialTheme.typography.headlineMedium)
+        Text("Choose up to three heroes. They appear in this order when you log a match.")
+        repeat(MAXIMUM_FAVOURITES) { index ->
+            val heroName = heroNames.getOrNull(index)
+            Button(
+                onClick = { onSlotSelected(index) },
+                enabled = index <= heroNames.size,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    if (heroName == null) {
+                        "Choose ${favouriteSlotLabel(index)} favourite"
+                    } else {
+                        "${favouriteSlotLabel(index).replaceFirstChar { it.uppercase() }} favourite: $heroName"
+                    },
+                )
+            }
+        }
+    }
+}
+
+private fun favouriteSlotLabel(index: Int): String = when (index) {
+    0 -> "first"
+    1 -> "second"
+    else -> "third"
+}
+
+private fun favouriteHeroes(heroNames: List<String>): List<Hero> = heroNames.mapNotNull { heroName ->
+    HeroCatalog.all.firstOrNull { it.name == heroName }
 }
 
 @Composable

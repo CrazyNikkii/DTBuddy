@@ -2,6 +2,8 @@ package com.dtbuddy.app.heroes
 
 import com.dtbuddy.app.data.CompletedMatchDao
 import com.dtbuddy.app.data.CompletedMatchEntity
+import com.dtbuddy.app.data.FavouriteHeroDao
+import com.dtbuddy.app.data.FavouriteHeroEntity
 import com.dtbuddy.app.data.LocalMatchRepository
 import java.time.LocalDate
 import kotlinx.coroutines.CompletableDeferred
@@ -14,6 +16,18 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MatchHeroSelectionViewModelTest {
+    @Test
+    fun favouriteActionsRefreshTheOrderedScreenState() = runBlocking {
+        val viewModel = MatchHeroSelectionViewModel(
+            LocalMatchRepository(FakeCompletedMatchDao(), favouriteHeroDao = FakeFavouriteHeroDao()),
+        )
+
+        assertTrue(viewModel.setFavouriteHero(0, HeroCatalog.all.first { it.name == "Barbarian" }))
+        assertTrue(viewModel.setFavouriteHero(1, HeroCatalog.all.first { it.name == "Moon Elf" }))
+        assertTrue(viewModel.setFavouriteHero(0, HeroCatalog.all.first { it.name == "Loki" }))
+
+        assertEquals(listOf("Loki", "Moon Elf"), viewModel.state.favouriteHeroNames)
+    }
     @Test
     fun saveCompleteMatchStoresItAndStartsANewEmptyLog() = runBlocking {
         val dao = FakeCompletedMatchDao()
@@ -411,5 +425,19 @@ class MatchHeroSelectionViewModelTest {
             datePlayed: String,
             note: String?,
         ): Int = 0
+    }
+
+    private class FakeFavouriteHeroDao : FavouriteHeroDao() {
+        private var favourites = emptyList<FavouriteHeroEntity>()
+
+        override suspend fun getAll(): List<FavouriteHeroEntity> = favourites
+
+        override suspend fun insert(favourite: FavouriteHeroEntity) {
+            favourites = favourites + favourite
+        }
+
+        override suspend fun deleteAll() {
+            favourites = emptyList()
+        }
     }
 }

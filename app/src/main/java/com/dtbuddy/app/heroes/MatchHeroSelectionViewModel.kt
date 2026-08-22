@@ -127,6 +127,16 @@ class MatchHeroSelectionViewModel(
         )
     }
 
+    suspend fun loadFavouriteHeroes() {
+        state = state.copy(favouriteHeroNames = localMatchRepository.getFavouriteHeroNames())
+    }
+
+    suspend fun setFavouriteHero(position: Int, hero: Hero): Boolean {
+        val saved = localMatchRepository.setFavouriteHero(position, hero.name)
+        if (saved) loadFavouriteHeroes()
+        return saved
+    }
+
     fun startNewMatch() {
         state = MatchHeroSelectionState()
     }

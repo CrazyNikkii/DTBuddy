@@ -1,6 +1,7 @@
 package com.dtbuddy.app.data
 
 import kotlin.math.roundToInt
+import com.dtbuddy.app.heroes.HeroCatalog
 
 data class PersonalOverallStats(
     val gamesPlayed: Int = 0,
@@ -62,8 +63,28 @@ data class PersonalHeroTurnOrderDetail(
 
 class LocalMatchRepository(
     private val completedMatchDao: CompletedMatchDao,
+    private val favouriteHeroDao: FavouriteHeroDao? = null,
     private val currentTimeMillis: () -> Long = System::currentTimeMillis,
 ) {
+    suspend fun getFavouriteHeroNames(): List<String> = favouriteHeroDao?.getAll()?.map { it.heroName }.orEmpty()
+
+    suspend fun setFavouriteHero(position: Int, heroName: String): Boolean {
+        val current = getFavouriteHeroNames()
+        if (
+            favouriteHeroDao == null ||
+            position !in 0 until MAXIMUM_FAVOURITES ||
+            position > current.size ||
+            heroName !in HeroCatalog.all.map { it.name } ||
+            (heroName in current && current[position.coerceAtMost(current.lastIndex)] != heroName)
+        ) {
+            return false
+        }
+        val updated = current.toMutableList()
+        if (position == updated.size) updated += heroName else updated[position] = heroName
+        favouriteHeroDao.replaceAll(updated)
+        return true
+    }
+
     suspend fun save(draft: CompletedMatchDraft): Long = completedMatchDao.insert(
         CompletedMatchEntity(
             playerHeroName = draft.playerHeroName,
@@ -145,6 +166,8 @@ class LocalMatchRepository(
         )
     }
 }
+
+const val MAXIMUM_FAVOURITES = 3
 
 private fun List<CompletedMatchEntity>.toPersonalTurnOrderStats(): PersonalTurnOrderStats {
     val wins = count { it.winner == "Player" }

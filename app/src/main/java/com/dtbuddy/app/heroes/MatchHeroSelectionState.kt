@@ -24,6 +24,7 @@ data class MatchHeroSelectionState(
     val personalOverallStats: PersonalOverallStats = PersonalOverallStats(),
     val personalHeroStats: List<PersonalHeroStats> = emptyList(),
     val personalHeroTurnOrderDetail: PersonalHeroTurnOrderDetail? = null,
+    val favouriteHeroNames: List<String> = emptyList(),
     val pendingDeletionMatch: CompletedMatchEntity? = null,
     val editingMatchId: Long? = null,
     val editReturnToProfileHistory: Boolean = false,
