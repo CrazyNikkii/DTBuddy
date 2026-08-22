@@ -340,6 +340,10 @@ private fun ProfileDestination(viewModel: MatchHeroSelectionViewModel) {
             onBack = { showingHistory = false },
         )
     } else {
+        LaunchedEffect(Unit) {
+            viewModel.loadPersonalOverallStats()
+        }
+        val stats = viewModel.state.personalOverallStats
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -351,6 +355,11 @@ private fun ProfileDestination(viewModel: MatchHeroSelectionViewModel) {
                 "During this solo test, your saved matches stay on this device.",
                 style = MaterialTheme.typography.bodyLarge,
             )
+            Text("Personal overall", style = MaterialTheme.typography.titleLarge)
+            Text("Games played: ${stats.gamesPlayed}", style = MaterialTheme.typography.bodyLarge)
+            Text("Wins: ${stats.wins}", style = MaterialTheme.typography.bodyLarge)
+            Text("Losses: ${stats.losses}", style = MaterialTheme.typography.bodyLarge)
+            Text("Win rate: ${stats.winRatePercentage}%", style = MaterialTheme.typography.bodyLarge)
             Button(onClick = { showingHistory = true }, modifier = Modifier.fillMaxWidth()) {
                 Text("Match history")
             }

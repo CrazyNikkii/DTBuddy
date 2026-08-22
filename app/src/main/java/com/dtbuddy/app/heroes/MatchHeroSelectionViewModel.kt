@@ -60,6 +60,12 @@ class MatchHeroSelectionViewModel(
         )
     }
 
+    suspend fun loadPersonalOverallStats() {
+        state = state.copy(
+            personalOverallStats = localMatchRepository.getPersonalOverallStats(),
+        )
+    }
+
     fun startNewMatch() {
         state = MatchHeroSelectionState()
     }

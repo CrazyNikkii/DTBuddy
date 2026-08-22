@@ -50,12 +50,54 @@ class LocalMatchRepositoryTest {
         assertEquals(listOf(3L, 2L, 1L), repository.getHistory().map { it.id })
     }
 
+    @Test
+    fun personalOverallStatsHandleEmptyAllWinAllLossAndMixedRecords() = runBlocking {
+        val dao = FakeCompletedMatchDao()
+        val repository = LocalMatchRepository(dao)
+
+        assertEquals(PersonalOverallStats(), repository.getPersonalOverallStats())
+
+        dao.matches += savedMatch(id = 1, winner = "Player")
+        dao.matches += savedMatch(id = 2, winner = "Player")
+        assertEquals(
+            PersonalOverallStats(gamesPlayed = 2, wins = 2, losses = 0),
+            repository.getPersonalOverallStats(),
+        )
+        assertEquals(100, repository.getPersonalOverallStats().winRatePercentage)
+
+        dao.matches.clear()
+        dao.matches += savedMatch(id = 1, winner = "Opponent")
+        assertEquals(
+            PersonalOverallStats(gamesPlayed = 1, wins = 0, losses = 1),
+            repository.getPersonalOverallStats(),
+        )
+        assertEquals(0, repository.getPersonalOverallStats().winRatePercentage)
+
+        dao.matches += savedMatch(id = 2, winner = "Player")
+        dao.matches += savedMatch(id = 3, winner = "Player")
+        assertEquals(
+            PersonalOverallStats(gamesPlayed = 3, wins = 2, losses = 1),
+            repository.getPersonalOverallStats(),
+        )
+        assertEquals(67, repository.getPersonalOverallStats().winRatePercentage)
+    }
+
     private fun matchDraft(datePlayed: LocalDate) = CompletedMatchDraft(
         playerHeroName = "Barbarian",
         opponentHeroName = "Moon Elf",
         winner = MatchParticipant.Player,
         firstPlayer = MatchParticipant.Opponent,
         datePlayed = datePlayed,
+    )
+
+    private fun savedMatch(id: Long, winner: String) = CompletedMatchEntity(
+        id = id,
+        playerHeroName = "Barbarian",
+        opponentHeroName = "Moon Elf",
+        winner = winner,
+        firstPlayer = "Player",
+        datePlayed = "2026-08-21",
+        createdAtMillis = id,
     )
 
     private class FakeCompletedMatchDao : CompletedMatchDao {

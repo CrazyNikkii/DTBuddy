@@ -79,6 +79,23 @@ class MatchHeroSelectionViewModelTest {
         assertEquals("Player", viewModel.state.historyMatches.single().winner)
     }
 
+    @Test
+    fun loadPersonalOverallStatsMakesTheDerivedSummaryAvailableForProfile() = runBlocking {
+        val dao = FakeCompletedMatchDao().apply {
+            matches += completedMatch(id = 1, winner = "Player")
+            matches += completedMatch(id = 2, winner = "Opponent")
+            matches += completedMatch(id = 3, winner = "Player")
+        }
+        val viewModel = MatchHeroSelectionViewModel(LocalMatchRepository(dao))
+
+        viewModel.loadPersonalOverallStats()
+
+        assertEquals(3, viewModel.state.personalOverallStats.gamesPlayed)
+        assertEquals(2, viewModel.state.personalOverallStats.wins)
+        assertEquals(1, viewModel.state.personalOverallStats.losses)
+        assertEquals(67, viewModel.state.personalOverallStats.winRatePercentage)
+    }
+
     private fun completeViewModel(dao: CompletedMatchDao): MatchHeroSelectionViewModel =
         MatchHeroSelectionViewModel(LocalMatchRepository(dao) { 10L }).also { viewModel ->
             viewModel.selectPlayer(HeroCatalog.all.first())
@@ -87,6 +104,16 @@ class MatchHeroSelectionViewModelTest {
             viewModel.selectFirstPlayer(MatchParticipant.Opponent)
             viewModel.selectDatePlayed(LocalDate.of(2026, 8, 21))
         }
+
+    private fun completedMatch(id: Long, winner: String) = CompletedMatchEntity(
+        id = id,
+        playerHeroName = "Barbarian",
+        opponentHeroName = "Moon Elf",
+        winner = winner,
+        firstPlayer = "Player",
+        datePlayed = "2026-08-21",
+        createdAtMillis = id,
+    )
 
     private class FakeCompletedMatchDao : CompletedMatchDao {
         val matches = mutableListOf<CompletedMatchEntity>()
