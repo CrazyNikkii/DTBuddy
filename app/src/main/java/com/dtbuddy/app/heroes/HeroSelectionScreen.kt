@@ -73,6 +73,7 @@ private enum class ProfilePage {
 @Composable
 fun HeroSelectionScreen(viewModel: MatchHeroSelectionViewModel) {
     var selectedDestinationName by remember { mutableStateOf(MainDestination.LogMatch.name) }
+    var profileHistoryRequested by remember { mutableStateOf(false) }
     val selectedDestination = MainDestination.valueOf(selectedDestinationName)
 
     Scaffold(
@@ -91,14 +92,22 @@ fun HeroSelectionScreen(viewModel: MatchHeroSelectionViewModel) {
     ) { contentPadding ->
         Box(modifier = Modifier.padding(contentPadding)) {
             when (selectedDestination) {
-                MainDestination.LogMatch -> MatchLogFlow(viewModel)
+                MainDestination.LogMatch -> MatchLogFlow(
+                    viewModel = viewModel,
+                    onProfileHistoryRequested = {
+                        profileHistoryRequested = true
+                        selectedDestinationName = MainDestination.Profile.name
+                    },
+                )
                 MainDestination.Requests -> RequestsPlaceholder()
                 MainDestination.Profile -> ProfileDestination(
                     viewModel = viewModel,
                     onEditRequested = { match ->
-                        viewModel.startEditing(match)
+                        viewModel.startEditing(match, returnToProfileHistory = true)
                         selectedDestinationName = MainDestination.LogMatch.name
                     },
+                    showHistoryOnEntry = profileHistoryRequested,
+                    onHistoryShown = { profileHistoryRequested = false },
                 )
                 MainDestination.GlobalStats -> GlobalStatsPlaceholder()
             }
@@ -107,7 +116,10 @@ fun HeroSelectionScreen(viewModel: MatchHeroSelectionViewModel) {
 }
 
 @Composable
-private fun MatchLogFlow(viewModel: MatchHeroSelectionViewModel) {
+private fun MatchLogFlow(
+    viewModel: MatchHeroSelectionViewModel,
+    onProfileHistoryRequested: () -> Unit,
+) {
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
 
@@ -253,8 +265,10 @@ private fun MatchLogFlow(viewModel: MatchHeroSelectionViewModel) {
                     winner = state.winner,
                     firstPlayer = state.firstPlayer,
                     datePlayed = state.datePlayed,
+                    note = state.note,
                     isSaving = state.isSaving,
                     isEditing = state.isEditing,
+                    onNoteChanged = viewModel::selectNote,
                     onSave = {
                         coroutineScope.launch {
                             if (viewModel.saveMatch()) {
@@ -280,13 +294,17 @@ private fun MatchLogFlow(viewModel: MatchHeroSelectionViewModel) {
             ) {
                 ReturnToPlayerHeroStep(navController)
             } else {
+                var showDiscardConfirmation by rememberSaveable { mutableStateOf(false) }
+                BackHandler { showDiscardConfirmation = true }
                 EditMatchOverview(
                     playerHeroName = state.playerHeroName,
                     opponentHeroName = state.opponentHeroName,
                     winner = state.winner,
                     firstPlayer = state.firstPlayer,
                     datePlayed = state.datePlayed,
+                    note = state.note,
                     isSaving = state.isSaving,
+                    onNoteChanged = viewModel::selectNote,
                     onPlayerHero = { navController.navigate(playerHeroRoute) },
                     onOpponentHero = { navController.navigate(opponentHeroRoute) },
                     onWinner = { navController.navigate(winnerRoute) },
@@ -302,6 +320,32 @@ private fun MatchLogFlow(viewModel: MatchHeroSelectionViewModel) {
                         }
                     },
                 )
+                if (showDiscardConfirmation) {
+                    AlertDialog(
+                        onDismissRequest = { showDiscardConfirmation = false },
+                        title = { Text("Discard changes?") },
+                        text = { Text("Your unsaved changes to this match will be lost.") },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    val returnToProfileHistory = viewModel.state.editReturnToProfileHistory
+                                    viewModel.discardEditing()
+                                    showDiscardConfirmation = false
+                                    if (returnToProfileHistory) {
+                                        onProfileHistoryRequested()
+                                    } else {
+                                        navController.popBackStack()
+                                    }
+                                },
+                            ) { Text("Discard changes") }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDiscardConfirmation = false }) {
+                                Text("Keep editing")
+                            }
+                        },
+                    )
+                }
             }
         }
         composable(savedMatchRoute) {
@@ -435,10 +479,19 @@ private fun PlaceholderDestination(title: String, message: String) {
 private fun ProfileDestination(
     viewModel: MatchHeroSelectionViewModel,
     onEditRequested: (CompletedMatchEntity) -> Unit,
+    showHistoryOnEntry: Boolean,
+    onHistoryShown: () -> Unit,
 ) {
     var profilePageName by rememberSaveable { mutableStateOf(ProfilePage.Overview.name) }
     var selectedHeroName by rememberSaveable { mutableStateOf<String?>(null) }
     val profilePage = ProfilePage.valueOf(profilePageName)
+
+    LaunchedEffect(showHistoryOnEntry) {
+        if (showHistoryOnEntry) {
+            profilePageName = ProfilePage.History.name
+            onHistoryShown()
+        }
+    }
 
     when (profilePage) {
         ProfilePage.History -> {
@@ -796,12 +849,14 @@ private fun EditMatchOverview(
     winner: MatchParticipant,
     firstPlayer: MatchParticipant,
     datePlayed: LocalDate,
+    note: String,
     isSaving: Boolean,
     onPlayerHero: () -> Unit,
     onOpponentHero: () -> Unit,
     onWinner: () -> Unit,
     onFirstPlayer: () -> Unit,
     onDatePlayed: () -> Unit,
+    onNoteChanged: (String) -> Unit,
     onSave: () -> Unit,
 ) {
     Column(
@@ -827,6 +882,7 @@ private fun EditMatchOverview(
         Button(onClick = onDatePlayed, modifier = Modifier.fillMaxWidth()) {
             Text("Date played: ${datePlayed.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))}")
         }
+        PrivateNoteField(note = note, onNoteChanged = onNoteChanged)
         Button(
             onClick = onSave,
             enabled = !isSaving,
@@ -844,8 +900,10 @@ private fun MatchSummary(
     winner: MatchParticipant,
     firstPlayer: MatchParticipant,
     datePlayed: LocalDate,
+    note: String,
     isSaving: Boolean,
     isEditing: Boolean,
+    onNoteChanged: (String) -> Unit,
     onSave: () -> Unit,
     onBack: () -> Unit,
 ) {
@@ -873,6 +931,7 @@ private fun MatchSummary(
             "Date played: ${datePlayed.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))}",
             style = MaterialTheme.typography.bodyLarge,
         )
+        PrivateNoteField(note = note, onNoteChanged = onNoteChanged)
         Text(
             if (isEditing) {
                 "Check the revised details, then save these changes on your device."
@@ -889,6 +948,18 @@ private fun MatchSummary(
             Text(if (isSaving) "Saving changes…" else if (isEditing) "Save changes" else "Save match")
         }
     }
+}
+
+@Composable
+private fun PrivateNoteField(note: String, onNoteChanged: (String) -> Unit) {
+    OutlinedTextField(
+        value = note,
+        onValueChange = onNoteChanged,
+        modifier = Modifier.fillMaxWidth(),
+        label = { Text("Private note (optional)") },
+        supportingText = { Text("${note.length}/${MatchHeroSelectionState.MAXIMUM_NOTE_LENGTH}") },
+        maxLines = 4,
+    )
 }
 
 @Composable
@@ -987,6 +1058,9 @@ private fun MatchHistoryRow(
         Text("Your hero: ${match.playerHeroName}", style = MaterialTheme.typography.bodyLarge)
         Text("Opponent hero: ${match.opponentHeroName}", style = MaterialTheme.typography.bodyLarge)
         Text(result, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+        match.note?.let { note ->
+            Text("Private note: $note", style = MaterialTheme.typography.bodyLarge)
+        }
         Button(onClick = { onEditRequested(match) }, modifier = Modifier.fillMaxWidth()) {
             Text("Edit match")
         }

@@ -17,6 +17,7 @@ data class MatchHeroSelectionState(
     val winner: MatchParticipant? = null,
     val firstPlayer: MatchParticipant? = null,
     val datePlayed: LocalDate? = null,
+    val note: String = "",
     val isSaving: Boolean = false,
     val historyMatches: List<CompletedMatchEntity> = emptyList(),
     val hasLoadedHistory: Boolean = false,
@@ -25,6 +26,7 @@ data class MatchHeroSelectionState(
     val personalHeroTurnOrderDetail: PersonalHeroTurnOrderDetail? = null,
     val pendingDeletionMatch: CompletedMatchEntity? = null,
     val editingMatchId: Long? = null,
+    val editReturnToProfileHistory: Boolean = false,
     val editingOriginalDatePlayed: LocalDate? = null,
     val lastSaveWasEdit: Boolean = false,
 ) {
@@ -56,16 +58,36 @@ data class MatchHeroSelectionState(
 
     fun selectDatePlayed(date: LocalDate): MatchHeroSelectionState = copy(datePlayed = date)
 
-    fun startEditing(match: CompletedMatchEntity): MatchHeroSelectionState = copy(
+    fun selectNote(note: String): MatchHeroSelectionState = copy(note = note.take(MAXIMUM_NOTE_LENGTH))
+
+    fun startEditing(
+        match: CompletedMatchEntity,
+        returnToProfileHistory: Boolean = false,
+    ): MatchHeroSelectionState = copy(
         playerHeroName = match.playerHeroName,
         opponentHeroName = match.opponentHeroName,
         winner = MatchParticipant.valueOf(match.winner),
         firstPlayer = MatchParticipant.valueOf(match.firstPlayer),
         datePlayed = LocalDate.parse(match.datePlayed),
+        note = match.note.orEmpty(),
         editingMatchId = match.id,
+        editReturnToProfileHistory = returnToProfileHistory,
         editingOriginalDatePlayed = LocalDate.parse(match.datePlayed),
         lastSaveWasEdit = false,
         pendingDeletionMatch = null,
+    )
+
+    fun discardEditing(): MatchHeroSelectionState = copy(
+        playerHeroName = null,
+        opponentHeroName = null,
+        winner = null,
+        firstPlayer = null,
+        datePlayed = null,
+        note = "",
+        editingMatchId = null,
+        editReturnToProfileHistory = false,
+        editingOriginalDatePlayed = null,
+        lastSaveWasEdit = false,
     )
 
     fun completedMatchDraftOrNull(): com.dtbuddy.app.data.CompletedMatchDraft? {
@@ -80,6 +102,11 @@ data class MatchHeroSelectionState(
             winner = selectedWinner,
             firstPlayer = selectedFirstPlayer,
             datePlayed = selectedDatePlayed,
+            note = note.trim().takeIf { it.isNotEmpty() },
         )
+    }
+
+    companion object {
+        const val MAXIMUM_NOTE_LENGTH = 500
     }
 }

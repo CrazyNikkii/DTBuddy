@@ -34,6 +34,10 @@ class MatchHeroSelectionViewModel(
         state = state.selectDatePlayed(date)
     }
 
+    fun selectNote(note: String) {
+        state = state.selectNote(note)
+    }
+
     fun ensureDatePlayed(today: LocalDate) {
         if (state.datePlayed == null) {
             selectDatePlayed(state.editingOriginalDatePlayed ?: today)
@@ -56,6 +60,7 @@ class MatchHeroSelectionViewModel(
                     if (updated) {
                         state = state.copy(
                             editingMatchId = null,
+                            editReturnToProfileHistory = false,
                             editingOriginalDatePlayed = null,
                             lastSaveWasEdit = true,
                         )
@@ -83,8 +88,15 @@ class MatchHeroSelectionViewModel(
         state = state.copy(pendingDeletionMatch = null)
     }
 
-    fun startEditing(match: com.dtbuddy.app.data.CompletedMatchEntity) {
-        state = state.startEditing(match)
+    fun startEditing(
+        match: com.dtbuddy.app.data.CompletedMatchEntity,
+        returnToProfileHistory: Boolean = false,
+    ) {
+        state = state.startEditing(match, returnToProfileHistory)
+    }
+
+    fun discardEditing() {
+        state = state.discardEditing()
     }
 
     suspend fun confirmMatchDeletion(): Boolean {

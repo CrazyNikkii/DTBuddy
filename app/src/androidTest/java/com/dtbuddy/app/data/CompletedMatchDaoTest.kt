@@ -13,6 +13,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class CompletedMatchDaoTest {
+    private val legacyDatabaseName = "completed-match-v1-test.db"
     private lateinit var database: AppDatabase
     private lateinit var dao: CompletedMatchDao
 
@@ -26,6 +27,7 @@ class CompletedMatchDaoTest {
     @After
     fun tearDown() {
         database.close()
+        InstrumentationRegistry.getInstrumentation().targetContext.deleteDatabase(legacyDatabaseName)
     }
 
     @Test
@@ -64,6 +66,7 @@ class CompletedMatchDaoTest {
                 winner = "Opponent",
                 firstPlayer = "Player",
                 datePlayed = "2026-08-22",
+                note = null,
             ),
         )
 
@@ -81,6 +84,69 @@ class CompletedMatchDaoTest {
             dao.getHistory().first(),
         )
         assertEquals(first, dao.getHistory().last().id)
+    }
+
+    @Test
+    fun insertAndUpdateStoreTheOptionalNote() = runBlocking {
+        val id = dao.insert(match(datePlayed = "2026-08-21", createdAtMillis = 10L).copy(note = "Initial note"))
+
+        assertEquals("Initial note", dao.getHistory().single().note)
+        assertEquals(
+            1,
+            dao.updateById(
+                id = id,
+                playerHeroName = "Barbarian",
+                opponentHeroName = "Moon Elf",
+                winner = "Player",
+                firstPlayer = "Opponent",
+                datePlayed = "2026-08-21",
+                note = "Updated note",
+            ),
+        )
+        assertEquals("Updated note", dao.getHistory().single().note)
+    }
+
+    @Test
+    fun migrationFromVersionOnePreservesExistingMatchesWithoutNotes() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        context.deleteDatabase(legacyDatabaseName)
+        val versionOneDatabase = context.openOrCreateDatabase(legacyDatabaseName, Context.MODE_PRIVATE, null)
+        versionOneDatabase.execSQL(
+            """
+            CREATE TABLE completed_matches (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                playerHeroName TEXT NOT NULL,
+                opponentHeroName TEXT NOT NULL,
+                winner TEXT NOT NULL,
+                firstPlayer TEXT NOT NULL,
+                datePlayed TEXT NOT NULL,
+                createdAtMillis INTEGER NOT NULL
+            )
+            """.trimIndent(),
+        )
+        versionOneDatabase.execSQL(
+            """
+            INSERT INTO completed_matches
+            (playerHeroName, opponentHeroName, winner, firstPlayer, datePlayed, createdAtMillis)
+            VALUES ('Barbarian', 'Moon Elf', 'Player', 'Opponent', '2026-08-21', 10)
+            """.trimIndent(),
+        )
+        versionOneDatabase.version = 1
+        versionOneDatabase.close()
+
+        val migratedDatabase = Room.databaseBuilder(context, AppDatabase::class.java, legacyDatabaseName)
+            .addMigrations(AppDatabase.MIGRATION_1_2)
+            .build()
+
+        val migratedMatch = migratedDatabase.completedMatchDao().getHistory().single()
+        assertEquals("Barbarian", migratedMatch.playerHeroName)
+        assertEquals("Moon Elf", migratedMatch.opponentHeroName)
+        assertEquals("Player", migratedMatch.winner)
+        assertEquals("Opponent", migratedMatch.firstPlayer)
+        assertEquals("2026-08-21", migratedMatch.datePlayed)
+        assertEquals(10L, migratedMatch.createdAtMillis)
+        assertEquals(null, migratedMatch.note)
+        migratedDatabase.close()
     }
 
     private fun match(datePlayed: String, createdAtMillis: Long) = CompletedMatchEntity(

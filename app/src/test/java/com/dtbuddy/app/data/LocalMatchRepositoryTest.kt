@@ -113,6 +113,33 @@ class LocalMatchRepositoryTest {
     }
 
     @Test
+    fun notesAreTrimmedStoredWithOnlyTheirMatchAndDoNotAffectStatistics() = runBlocking {
+        val dao = FakeCompletedMatchDao()
+        val repository = LocalMatchRepository(dao)
+
+        repository.save(matchDraft(LocalDate.of(2026, 8, 21)).copy(note = "  Great comeback  "))
+        repository.save(matchDraft(LocalDate.of(2026, 8, 22)).copy(note = "   "))
+
+        assertEquals("Great comeback", repository.getHistory()[1].note)
+        assertEquals(null, repository.getHistory()[0].note)
+        assertEquals(PersonalOverallStats(gamesPlayed = 2, wins = 2, losses = 0), repository.getPersonalOverallStats())
+    }
+
+    @Test
+    fun updateChangesOrClearsOnlyTheSelectedMatchNote() = runBlocking {
+        val selected = savedMatch(id = 1, winner = "Player").copy(note = "Old note")
+        val untouched = savedMatch(id = 2, winner = "Opponent").copy(note = "Keep me")
+        val dao = FakeCompletedMatchDao().apply { matches += listOf(selected, untouched) }
+        val repository = LocalMatchRepository(dao)
+
+        assertEquals(true, repository.update(1, matchDraft(LocalDate.of(2026, 8, 22)).copy(note = null)))
+
+        assertEquals(null, dao.matches.single { it.id == 1L }.note)
+        assertEquals("Keep me", dao.matches.single { it.id == 2L }.note)
+        assertEquals(PersonalOverallStats(gamesPlayed = 2, wins = 1, losses = 1), repository.getPersonalOverallStats())
+    }
+
+    @Test
     fun personalOverallStatsHandleEmptyAllWinAllLossAndMixedRecords() = runBlocking {
         val dao = FakeCompletedMatchDao()
         val repository = LocalMatchRepository(dao)
@@ -266,6 +293,7 @@ class LocalMatchRepositoryTest {
         winner = MatchParticipant.Player,
         firstPlayer = MatchParticipant.Opponent,
         datePlayed = datePlayed,
+        note = null,
     )
 
     private fun savedMatch(
@@ -311,6 +339,7 @@ class LocalMatchRepositoryTest {
             winner: String,
             firstPlayer: String,
             datePlayed: String,
+            note: String?,
         ): Int {
             val index = matches.indexOfFirst { it.id == id }
             if (index == -1) return 0
@@ -320,6 +349,7 @@ class LocalMatchRepositoryTest {
                 winner = winner,
                 firstPlayer = firstPlayer,
                 datePlayed = datePlayed,
+                note = note,
             )
             return 1
         }
