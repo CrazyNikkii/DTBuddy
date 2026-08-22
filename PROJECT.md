@@ -94,9 +94,10 @@ release does not change this roster without an explicit product decision.
 ## Confirmed main navigation
 
 - The app's primary navigation uses four destinations: **Log match**,
-  **Requests**, **Profile**, and **Global stats**. The Log match destination is
-  the initial selected destination during the solo test and makes starting a
-  match quick. Global stats is the global hero-statistics discovery view.
+  **Requests**, **Profile**, and **Global stats**. The Log match destination
+  opens on a main-menu screen during the solo test; its prominent **Log a
+  match** action begins the guided match-log flow. Global stats is the global
+  hero-statistics discovery view.
 - Requests is shown when linked-match requests are available in Milestone 2;
   it shows a badge/count for pending confirmations and change requests. It is
   not a functional solo-test feature.
@@ -116,9 +117,13 @@ release does not change this roster without an explicit product decision.
   confirmation before discarding it. Choosing to keep editing leaves the draft
   unchanged; choosing to discard makes no saved-data change.
 - The app exits only when the player uses Back from the main-menu root and no
-  earlier screen remains. Until the planned main-menu screen is introduced,
-  the selected primary navigation destination with no nested screen is the
-  temporary root for this behaviour.
+  earlier screen remains. The first Back gesture at that root shows a brief
+  **Press Back again to exit** message; a second Back gesture within a short
+  time closes the app, reducing accidental exits while keeping gesture-only
+  exit available.
+- Back from a primary destination other than the main-menu root, including
+  Requests, Profile, or Global stats, returns to the main menu before the app
+  can exit.
 
 ## Confirmed visual direction
 

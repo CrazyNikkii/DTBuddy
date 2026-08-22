@@ -42,6 +42,18 @@ class MatchHeroSelectionViewModelTest {
     }
 
     @Test
+    fun discardingANewMatchLogClearsItsDraftWithoutSaving() {
+        val dao = FakeCompletedMatchDao()
+        val viewModel = MatchHeroSelectionViewModel(LocalMatchRepository(dao))
+        viewModel.selectPlayer(HeroCatalog.all.first())
+
+        viewModel.startNewMatch()
+
+        assertEquals(MatchHeroSelectionState(), viewModel.state)
+        assertTrue(dao.matches.isEmpty())
+    }
+
+    @Test
     fun secondSaveIsRejectedWhileTheFirstSaveIsInProgress() = runBlocking {
         val dao = BlockingCompletedMatchDao()
         val viewModel = completeViewModel(dao)
