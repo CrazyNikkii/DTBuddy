@@ -1,6 +1,8 @@
 package com.dtbuddy.app.heroes
 
 import android.app.DatePickerDialog
+import android.app.Activity
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,6 +47,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 private const val playerHeroRoute = "playerHero"
 private const val opponentHeroRoute = "opponentHero"
@@ -75,6 +78,9 @@ fun HeroSelectionScreen(viewModel: MatchHeroSelectionViewModel) {
     var selectedDestinationName by remember { mutableStateOf(MainDestination.LogMatch.name) }
     var profileHistoryRequested by remember { mutableStateOf(false) }
     val selectedDestination = MainDestination.valueOf(selectedDestinationName)
+    if (selectedDestination != MainDestination.LogMatch) {
+        BackHandler { selectedDestinationName = MainDestination.LogMatch.name }
+    }
 
     Scaffold(
         bottomBar = {
@@ -92,7 +98,7 @@ fun HeroSelectionScreen(viewModel: MatchHeroSelectionViewModel) {
     ) { contentPadding ->
         Box(modifier = Modifier.padding(contentPadding)) {
             when (selectedDestination) {
-                MainDestination.LogMatch -> MatchLogFlow(
+                MainDestination.LogMatch -> MatchLogDestination(
                     viewModel = viewModel,
                     onProfileHistoryRequested = {
                         profileHistoryRequested = true
@@ -116,9 +122,69 @@ fun HeroSelectionScreen(viewModel: MatchHeroSelectionViewModel) {
 }
 
 @Composable
+private fun MatchLogDestination(
+    viewModel: MatchHeroSelectionViewModel,
+    onProfileHistoryRequested: () -> Unit,
+) {
+    var isLoggingNewMatch by rememberSaveable { mutableStateOf(false) }
+    if (isLoggingNewMatch || viewModel.state.isEditing) {
+        MatchLogFlow(
+            viewModel = viewModel,
+            onProfileHistoryRequested = onProfileHistoryRequested,
+            onNewLogDiscarded = { isLoggingNewMatch = false },
+        )
+    } else {
+        MainMenu(
+            onLogMatch = {
+                viewModel.startNewMatch()
+                isLoggingNewMatch = true
+            },
+        )
+    }
+}
+
+@Composable
+private fun MainMenu(onLogMatch: () -> Unit) {
+    val context = LocalContext.current
+    val activity = context as? Activity
+    var exitArmed by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(exitArmed) {
+        if (exitArmed) {
+            delay(2_000)
+            exitArmed = false
+        }
+    }
+    BackHandler {
+        if (exitArmed) {
+            activity?.finish()
+        } else {
+            exitArmed = true
+            Toast.makeText(context, "Press Back again to exit", Toast.LENGTH_SHORT).show()
+        }
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
+    ) {
+        Text("DTBuddy", style = MaterialTheme.typography.displaySmall)
+        Text("Ready for your next game?", style = MaterialTheme.typography.headlineLarge)
+        Button(onClick = onLogMatch, modifier = Modifier.fillMaxWidth()) {
+            Text("Log a match")
+        }
+        Text(
+            "Completed 1v1 matches stay on this device.",
+            style = MaterialTheme.typography.bodyLarge,
+        )
+    }
+}
+
+@Composable
 private fun MatchLogFlow(
     viewModel: MatchHeroSelectionViewModel,
     onProfileHistoryRequested: () -> Unit,
+    onNewLogDiscarded: () -> Unit,
 ) {
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
@@ -128,6 +194,9 @@ private fun MatchLogFlow(
         startDestination = if (viewModel.state.isEditing) editOverviewRoute else playerHeroRoute,
     ) {
         composable(playerHeroRoute) {
+            val isEditing = viewModel.state.isEditing
+            var showDiscardConfirmation by rememberSaveable { mutableStateOf(false) }
+            if (!isEditing) BackHandler { showDiscardConfirmation = true }
             HeroPicker(
                 title = "Choose your hero",
                 description = "Start your match log by choosing the hero you played.",
@@ -141,6 +210,23 @@ private fun MatchLogFlow(
                     }
                 },
             )
+            if (showDiscardConfirmation) {
+                AlertDialog(
+                    onDismissRequest = { showDiscardConfirmation = false },
+                    title = { Text("Discard match log?") },
+                    text = { Text("Your unfinished match log will be discarded.") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            viewModel.startNewMatch()
+                            showDiscardConfirmation = false
+                            onNewLogDiscarded()
+                        }) { Text("Discard log") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDiscardConfirmation = false }) { Text("Keep logging") }
+                    },
+                )
+            }
         }
         composable(opponentHeroRoute) {
             val playerHeroName = viewModel.state.playerHeroName
@@ -352,6 +438,10 @@ private fun MatchLogFlow(
             if (viewModel.state.completedMatchDraftOrNull() == null) {
                 ReturnToPlayerHeroStep(navController)
             } else {
+                BackHandler {
+                    viewModel.startNewMatch()
+                    onNewLogDiscarded()
+                }
                 SavedMatchConfirmation(
                     wasEdited = viewModel.state.lastSaveWasEdit,
                     onViewMatchHistory = { navController.navigate(matchHistoryRoute) },
