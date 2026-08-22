@@ -36,6 +36,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavHostController
 import com.dtbuddy.app.data.CompletedMatchEntity
+import com.dtbuddy.app.data.PersonalHeroMatchupStats
 import com.dtbuddy.app.data.PersonalHeroStats
 import com.dtbuddy.app.data.PersonalHeroTurnOrderDetail
 import java.time.LocalDate
@@ -485,37 +486,64 @@ private fun PersonalHeroTurnOrderDetailScreen(
     detail: PersonalHeroTurnOrderDetail,
     onBack: () -> Unit,
 ) {
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Button(onClick = onBack) {
-            Text("Back")
+        item {
+            Button(onClick = onBack) {
+                Text("Back")
+            }
         }
-        Text(detail.heroName, style = MaterialTheme.typography.headlineMedium)
-        PersonalTurnOrderStatsSection(
-            "Overall",
-            detail.overall.gamesPlayed,
-            detail.overall.wins,
-            detail.overall.losses,
-            detail.overall.winRatePercentage,
-        )
-        PersonalTurnOrderStatsSection(
-            "You went first",
-            detail.playerWentFirst.gamesPlayed,
-            detail.playerWentFirst.wins,
-            detail.playerWentFirst.losses,
-            detail.playerWentFirst.winRatePercentage,
-        )
-        PersonalTurnOrderStatsSection(
-            "Opponent went first",
-            detail.opponentWentFirst.gamesPlayed,
-            detail.opponentWentFirst.wins,
-            detail.opponentWentFirst.losses,
-            detail.opponentWentFirst.winRatePercentage,
-        )
+        item {
+            Text(detail.heroName, style = MaterialTheme.typography.headlineMedium)
+        }
+        item {
+            PersonalTurnOrderStatsSection(
+                "Overall",
+                detail.overall.gamesPlayed,
+                detail.overall.wins,
+                detail.overall.losses,
+                detail.overall.winRatePercentage,
+            )
+        }
+        item {
+            PersonalTurnOrderStatsSection(
+                "You went first",
+                detail.playerWentFirst.gamesPlayed,
+                detail.playerWentFirst.wins,
+                detail.playerWentFirst.losses,
+                detail.playerWentFirst.winRatePercentage,
+            )
+        }
+        item {
+            PersonalTurnOrderStatsSection(
+                "Opponent went first",
+                detail.opponentWentFirst.gamesPlayed,
+                detail.opponentWentFirst.wins,
+                detail.opponentWentFirst.losses,
+                detail.opponentWentFirst.winRatePercentage,
+            )
+        }
+        item {
+            Text("Matchups", style = MaterialTheme.typography.titleLarge)
+        }
+        items(detail.matchups, key = { it.opponentHeroName }) { matchup ->
+            PersonalHeroMatchupStatsRow(matchup)
+        }
+    }
+}
+
+@Composable
+private fun PersonalHeroMatchupStatsRow(stats: PersonalHeroMatchupStats) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(stats.opponentHeroName, style = MaterialTheme.typography.titleMedium)
+        Text("Games played: ${stats.gamesPlayed}", style = MaterialTheme.typography.bodyLarge)
+        Text("Wins: ${stats.wins}", style = MaterialTheme.typography.bodyLarge)
+        Text("Losses: ${stats.losses}", style = MaterialTheme.typography.bodyLarge)
+        Text("Win rate: ${stats.winRatePercentage}%", style = MaterialTheme.typography.bodyLarge)
     }
 }
 

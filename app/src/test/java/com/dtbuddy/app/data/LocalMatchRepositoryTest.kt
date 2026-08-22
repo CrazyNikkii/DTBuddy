@@ -162,6 +162,42 @@ class LocalMatchRepositoryTest {
         assertEquals(33, detail.opponentWentFirst.winRatePercentage)
     }
 
+    @Test
+    fun personalHeroTurnOrderDetailGroupsEverySelectedHeroMatchIntoAlphabeticalMatchups() = runBlocking {
+        val dao = FakeCompletedMatchDao()
+        val repository = LocalMatchRepository(dao)
+
+        dao.matches += savedMatch(id = 1, opponentHeroName = "Pyromancer", winner = "Opponent")
+        dao.matches += savedMatch(id = 2, opponentHeroName = "Moon Elf", winner = "Player")
+        dao.matches += savedMatch(id = 3, opponentHeroName = "Moon Elf", winner = "Opponent")
+        dao.matches += savedMatch(id = 4, opponentHeroName = "Moon Elf", winner = "Player")
+        dao.matches += savedMatch(id = 5, opponentHeroName = "Loki", winner = "Player")
+        dao.matches += savedMatch(id = 6, opponentHeroName = "Loki", winner = "Player")
+        dao.matches += savedMatch(id = 7, playerHeroName = "Loki", opponentHeroName = "Moon Elf", winner = "Player")
+
+        val detail = repository.getPersonalHeroTurnOrderDetail("Barbarian")
+
+        assertEquals(
+            listOf(
+                PersonalHeroMatchupStats("Loki", 2, 2, 0),
+                PersonalHeroMatchupStats("Moon Elf", 3, 2, 1),
+                PersonalHeroMatchupStats("Pyromancer", 1, 0, 1),
+            ),
+            detail.matchups,
+        )
+        assertEquals(100, detail.matchups[0].winRatePercentage)
+        assertEquals(67, detail.matchups[1].winRatePercentage)
+        assertEquals(0, detail.matchups[2].winRatePercentage)
+        assertEquals(detail.overall.gamesPlayed, detail.matchups.sumOf { it.gamesPlayed })
+    }
+
+    @Test
+    fun personalHeroTurnOrderDetailHasNoMatchupsForAnUnplayedHero() = runBlocking {
+        val repository = LocalMatchRepository(FakeCompletedMatchDao())
+
+        assertEquals(emptyList<PersonalHeroMatchupStats>(), repository.getPersonalHeroTurnOrderDetail("Barbarian").matchups)
+    }
+
     private fun matchDraft(datePlayed: LocalDate) = CompletedMatchDraft(
         playerHeroName = "Barbarian",
         opponentHeroName = "Moon Elf",

@@ -116,8 +116,8 @@ class MatchHeroSelectionViewModelTest {
     @Test
     fun loadPersonalHeroTurnOrderDetailMakesSelectedHeroRecordsAvailableForTheScreen() = runBlocking {
         val dao = FakeCompletedMatchDao().apply {
-            matches += completedMatch(id = 1, winner = "Player", firstPlayer = "Player")
-            matches += completedMatch(id = 2, winner = "Opponent", firstPlayer = "Opponent")
+            matches += completedMatch(id = 1, winner = "Player", firstPlayer = "Player", opponentHeroName = "Moon Elf")
+            matches += completedMatch(id = 2, winner = "Opponent", firstPlayer = "Opponent", opponentHeroName = "Pyromancer")
         }
         val viewModel = MatchHeroSelectionViewModel(LocalMatchRepository(dao))
 
@@ -128,6 +128,7 @@ class MatchHeroSelectionViewModelTest {
         assertEquals(2, detail?.overall?.gamesPlayed)
         assertEquals(1, detail?.playerWentFirst?.wins)
         assertEquals(1, detail?.opponentWentFirst?.losses)
+        assertEquals(listOf("Moon Elf", "Pyromancer"), detail?.matchups?.map { it.opponentHeroName })
     }
 
     private fun completeViewModel(dao: CompletedMatchDao): MatchHeroSelectionViewModel =
@@ -144,10 +145,11 @@ class MatchHeroSelectionViewModelTest {
         winner: String,
         playerHeroName: String = "Barbarian",
         firstPlayer: String = "Player",
+        opponentHeroName: String = "Moon Elf",
     ) = CompletedMatchEntity(
         id = id,
         playerHeroName = playerHeroName,
-        opponentHeroName = "Moon Elf",
+        opponentHeroName = opponentHeroName,
         winner = winner,
         firstPlayer = firstPlayer,
         datePlayed = "2026-08-21",
