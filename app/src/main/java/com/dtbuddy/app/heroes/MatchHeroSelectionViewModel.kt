@@ -66,6 +66,12 @@ class MatchHeroSelectionViewModel(
         )
     }
 
+    suspend fun loadPersonalHeroStats() {
+        state = state.copy(
+            personalHeroStats = localMatchRepository.getPersonalHeroStats(),
+        )
+    }
+
     fun startNewMatch() {
         state = MatchHeroSelectionState()
     }

@@ -2,6 +2,7 @@ package com.dtbuddy.app.heroes
 
 import com.dtbuddy.app.data.CompletedMatchEntity
 import com.dtbuddy.app.data.PersonalOverallStats
+import com.dtbuddy.app.data.PersonalHeroStats
 import java.time.LocalDate
 
 enum class MatchParticipant {
@@ -19,6 +20,7 @@ data class MatchHeroSelectionState(
     val historyMatches: List<CompletedMatchEntity> = emptyList(),
     val hasLoadedHistory: Boolean = false,
     val personalOverallStats: PersonalOverallStats = PersonalOverallStats(),
+    val personalHeroStats: List<PersonalHeroStats> = emptyList(),
 ) {
     fun selectPlayer(hero: Hero): MatchHeroSelectionState = copy(
         playerHeroName = hero.name,

@@ -14,6 +14,19 @@ data class PersonalOverallStats(
     }
 }
 
+data class PersonalHeroStats(
+    val heroName: String,
+    val gamesPlayed: Int,
+    val wins: Int,
+    val losses: Int,
+) {
+    val winRatePercentage: Int = if (gamesPlayed == 0) {
+        0
+    } else {
+        (wins.toDouble() / gamesPlayed * 100).roundToInt()
+    }
+}
+
 class LocalMatchRepository(
     private val completedMatchDao: CompletedMatchDao,
     private val currentTimeMillis: () -> Long = System::currentTimeMillis,
@@ -40,4 +53,17 @@ class LocalMatchRepository(
             losses = matches.size - wins,
         )
     }
+
+    suspend fun getPersonalHeroStats(): List<PersonalHeroStats> = completedMatchDao.getHistory()
+        .groupBy { it.playerHeroName }
+        .map { (heroName, matches) ->
+            val wins = matches.count { it.winner == "Player" }
+            PersonalHeroStats(
+                heroName = heroName,
+                gamesPlayed = matches.size,
+                wins = wins,
+                losses = matches.size - wins,
+            )
+        }
+        .sortedBy { it.heroName }
 }
