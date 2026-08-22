@@ -107,6 +107,61 @@ class LocalMatchRepositoryTest {
         assertEquals(0, repository.getPersonalHeroStats()[2].winRatePercentage)
     }
 
+    @Test
+    fun personalHeroTurnOrderDetailSeparatesEverySelectedHeroMatchByTurnOrder() = runBlocking {
+        val dao = FakeCompletedMatchDao()
+        val repository = LocalMatchRepository(dao)
+
+        dao.matches += savedMatch(id = 1, winner = "Player", firstPlayer = "Player")
+        dao.matches += savedMatch(id = 2, winner = "Opponent", firstPlayer = "Player")
+        dao.matches += savedMatch(id = 3, winner = "Player", firstPlayer = "Opponent")
+        dao.matches += savedMatch(id = 4, winner = "Opponent", firstPlayer = "Opponent")
+        dao.matches += savedMatch(id = 5, winner = "Player", playerHeroName = "Moon Elf", firstPlayer = "Player")
+
+        val detail = repository.getPersonalHeroTurnOrderDetail("Barbarian")
+
+        assertEquals(PersonalHeroStats("Barbarian", 4, 2, 2), detail.overall)
+        assertEquals(PersonalTurnOrderStats(2, 1, 1), detail.playerWentFirst)
+        assertEquals(PersonalTurnOrderStats(2, 1, 1), detail.opponentWentFirst)
+        assertEquals(50, detail.overall.winRatePercentage)
+        assertEquals(50, detail.playerWentFirst.winRatePercentage)
+        assertEquals(50, detail.opponentWentFirst.winRatePercentage)
+    }
+
+    @Test
+    fun personalHeroTurnOrderDetailShowsEmptyUnusedTurnOrderAndCorrectOneSidedRates() = runBlocking {
+        val dao = FakeCompletedMatchDao()
+        val repository = LocalMatchRepository(dao)
+
+        dao.matches += savedMatch(id = 1, winner = "Player", firstPlayer = "Player")
+
+        val detail = repository.getPersonalHeroTurnOrderDetail("Barbarian")
+
+        assertEquals(PersonalTurnOrderStats(1, 1, 0), detail.playerWentFirst)
+        assertEquals(PersonalTurnOrderStats(), detail.opponentWentFirst)
+        assertEquals(100, detail.playerWentFirst.winRatePercentage)
+        assertEquals(0, detail.opponentWentFirst.winRatePercentage)
+    }
+
+    @Test
+    fun personalHeroTurnOrderDetailCoversAllLossesAndRoundsPartialWinRates() = runBlocking {
+        val dao = FakeCompletedMatchDao()
+        val repository = LocalMatchRepository(dao)
+
+        dao.matches += savedMatch(id = 1, winner = "Opponent", firstPlayer = "Player")
+        dao.matches += savedMatch(id = 2, winner = "Opponent", firstPlayer = "Player")
+        dao.matches += savedMatch(id = 3, winner = "Player", firstPlayer = "Opponent")
+        dao.matches += savedMatch(id = 4, winner = "Opponent", firstPlayer = "Opponent")
+        dao.matches += savedMatch(id = 5, winner = "Opponent", firstPlayer = "Opponent")
+
+        val detail = repository.getPersonalHeroTurnOrderDetail("Barbarian")
+
+        assertEquals(PersonalTurnOrderStats(2, 0, 2), detail.playerWentFirst)
+        assertEquals(0, detail.playerWentFirst.winRatePercentage)
+        assertEquals(PersonalTurnOrderStats(3, 1, 2), detail.opponentWentFirst)
+        assertEquals(33, detail.opponentWentFirst.winRatePercentage)
+    }
+
     private fun matchDraft(datePlayed: LocalDate) = CompletedMatchDraft(
         playerHeroName = "Barbarian",
         opponentHeroName = "Moon Elf",
@@ -120,12 +175,13 @@ class LocalMatchRepositoryTest {
         winner: String,
         playerHeroName: String = "Barbarian",
         opponentHeroName: String = "Moon Elf",
+        firstPlayer: String = "Player",
     ) = CompletedMatchEntity(
         id = id,
         playerHeroName = playerHeroName,
         opponentHeroName = opponentHeroName,
         winner = winner,
-        firstPlayer = "Player",
+        firstPlayer = firstPlayer,
         datePlayed = "2026-08-21",
         createdAtMillis = id,
     )

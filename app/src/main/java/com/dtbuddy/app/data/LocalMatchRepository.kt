@@ -27,6 +27,25 @@ data class PersonalHeroStats(
     }
 }
 
+data class PersonalTurnOrderStats(
+    val gamesPlayed: Int = 0,
+    val wins: Int = 0,
+    val losses: Int = 0,
+) {
+    val winRatePercentage: Int = if (gamesPlayed == 0) {
+        0
+    } else {
+        (wins.toDouble() / gamesPlayed * 100).roundToInt()
+    }
+}
+
+data class PersonalHeroTurnOrderDetail(
+    val heroName: String,
+    val overall: PersonalHeroStats,
+    val playerWentFirst: PersonalTurnOrderStats,
+    val opponentWentFirst: PersonalTurnOrderStats,
+)
+
 class LocalMatchRepository(
     private val completedMatchDao: CompletedMatchDao,
     private val currentTimeMillis: () -> Long = System::currentTimeMillis,
@@ -66,4 +85,33 @@ class LocalMatchRepository(
             )
         }
         .sortedBy { it.heroName }
+
+    suspend fun getPersonalHeroTurnOrderDetail(heroName: String): PersonalHeroTurnOrderDetail {
+        val heroMatches = completedMatchDao.getHistory().filter { it.playerHeroName == heroName }
+        val overall = heroMatches.toPersonalTurnOrderStats()
+        return PersonalHeroTurnOrderDetail(
+            heroName = heroName,
+            overall = PersonalHeroStats(
+                heroName = heroName,
+                gamesPlayed = overall.gamesPlayed,
+                wins = overall.wins,
+                losses = overall.losses,
+            ),
+            playerWentFirst = heroMatches
+                .filter { it.firstPlayer == "Player" }
+                .toPersonalTurnOrderStats(),
+            opponentWentFirst = heroMatches
+                .filter { it.firstPlayer == "Opponent" }
+                .toPersonalTurnOrderStats(),
+        )
+    }
+}
+
+private fun List<CompletedMatchEntity>.toPersonalTurnOrderStats(): PersonalTurnOrderStats {
+    val wins = count { it.winner == "Player" }
+    return PersonalTurnOrderStats(
+        gamesPlayed = size,
+        wins = wins,
+        losses = size - wins,
+    )
 }

@@ -72,6 +72,12 @@ class MatchHeroSelectionViewModel(
         )
     }
 
+    suspend fun loadPersonalHeroTurnOrderDetail(heroName: String) {
+        state = state.copy(
+            personalHeroTurnOrderDetail = localMatchRepository.getPersonalHeroTurnOrderDetail(heroName),
+        )
+    }
+
     fun startNewMatch() {
         state = MatchHeroSelectionState()
     }
