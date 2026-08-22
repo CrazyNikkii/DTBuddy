@@ -12,4 +12,7 @@ interface CompletedMatchDao {
 
     @Query("SELECT * FROM completed_matches ORDER BY datePlayed DESC, createdAtMillis DESC, id DESC")
     suspend fun getHistory(): List<CompletedMatchEntity>
+
+    @Query("DELETE FROM completed_matches WHERE id = :id")
+    suspend fun deleteById(id: Long): Int
 }

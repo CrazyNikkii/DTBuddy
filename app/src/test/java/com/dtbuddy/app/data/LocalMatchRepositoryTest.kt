@@ -51,6 +51,24 @@ class LocalMatchRepositoryTest {
     }
 
     @Test
+    fun deleteRemovesOnlyTheSelectedMatchAndStatisticsUseRemainingMatches() = runBlocking {
+        val dao = FakeCompletedMatchDao().apply {
+            matches += savedMatch(id = 1, winner = "Player")
+            matches += savedMatch(id = 2, winner = "Opponent")
+            matches += savedMatch(id = 3, winner = "Player")
+        }
+        val repository = LocalMatchRepository(dao)
+
+        assertEquals(true, repository.delete(2))
+        assertEquals(listOf(3L, 1L), repository.getHistory().map { it.id })
+        assertEquals(PersonalOverallStats(gamesPlayed = 2, wins = 2, losses = 0), repository.getPersonalOverallStats())
+        assertEquals(
+            PersonalHeroStats("Barbarian", gamesPlayed = 2, wins = 2, losses = 0),
+            repository.getPersonalHeroStats().single(),
+        )
+    }
+
+    @Test
     fun personalOverallStatsHandleEmptyAllWinAllLossAndMixedRecords() = runBlocking {
         val dao = FakeCompletedMatchDao()
         val repository = LocalMatchRepository(dao)
@@ -236,5 +254,10 @@ class LocalMatchRepositoryTest {
                 .thenByDescending { it.createdAtMillis }
                 .thenByDescending { it.id },
         )
+
+        override suspend fun deleteById(id: Long): Int {
+            val removed = matches.removeAll { it.id == id }
+            return if (removed) 1 else 0
+        }
     }
 }

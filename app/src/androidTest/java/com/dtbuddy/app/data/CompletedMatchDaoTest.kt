@@ -40,6 +40,16 @@ class CompletedMatchDaoTest {
         )
     }
 
+    @Test
+    fun deleteByIdRemovesOnlyTheSelectedStoredMatch() = runBlocking {
+        val first = dao.insert(match(datePlayed = "2026-08-21", createdAtMillis = 10L))
+        val selected = dao.insert(match(datePlayed = "2026-08-21", createdAtMillis = 10L))
+        val third = dao.insert(match(datePlayed = "2026-08-21", createdAtMillis = 10L))
+
+        assertEquals(1, dao.deleteById(selected))
+        assertEquals(listOf(third, first), dao.getHistory().map { it.id })
+    }
+
     private fun match(datePlayed: String, createdAtMillis: Long) = CompletedMatchEntity(
         playerHeroName = "Barbarian",
         opponentHeroName = "Moon Elf",
