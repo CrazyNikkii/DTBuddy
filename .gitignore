@@ -3,7 +3,9 @@
 .specify/extensions/*/local-config.yml
 
 # Android / Kotlin build output and local IDE configuration
+.local-tools/
 .gradle/
+.kotlin/
 build/
 app/build/
 *.iml
