@@ -37,6 +37,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavHostController
 import com.dtbuddy.app.data.CompletedMatchEntity
 import com.dtbuddy.app.data.PersonalHeroStats
+import com.dtbuddy.app.data.PersonalHeroTurnOrderDetail
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -61,6 +62,7 @@ private enum class MainDestination(val label: String) {
 private enum class ProfilePage {
     Overview,
     Heroes,
+    HeroDetail,
     History,
 }
 
@@ -335,6 +337,7 @@ private fun PlaceholderDestination(title: String, message: String) {
 @Composable
 private fun ProfileDestination(viewModel: MatchHeroSelectionViewModel) {
     var profilePageName by rememberSaveable { mutableStateOf(ProfilePage.Overview.name) }
+    var selectedHeroName by rememberSaveable { mutableStateOf<String?>(null) }
     val profilePage = ProfilePage.valueOf(profilePageName)
 
     when (profilePage) {
@@ -357,7 +360,31 @@ private fun ProfileDestination(viewModel: MatchHeroSelectionViewModel) {
             PersonalHeroes(
                 stats = viewModel.state.personalHeroStats,
                 onBack = { profilePageName = ProfilePage.Overview.name },
+                onHeroSelected = { heroName ->
+                    selectedHeroName = heroName
+                    profilePageName = ProfilePage.HeroDetail.name
+                },
             )
+        }
+        ProfilePage.HeroDetail -> {
+            val heroName = selectedHeroName
+            if (heroName == null) {
+                LaunchedEffect(Unit) {
+                    profilePageName = ProfilePage.Heroes.name
+                }
+            } else {
+                BackHandler { profilePageName = ProfilePage.Heroes.name }
+                LaunchedEffect(heroName) {
+                    viewModel.loadPersonalHeroTurnOrderDetail(heroName)
+                }
+                val detail = viewModel.state.personalHeroTurnOrderDetail
+                if (detail?.heroName == heroName) {
+                    PersonalHeroTurnOrderDetailScreen(
+                        detail = detail,
+                        onBack = { profilePageName = ProfilePage.Heroes.name },
+                    )
+                }
+            }
         }
         ProfilePage.Overview -> {
             LaunchedEffect(Unit) {
@@ -398,7 +425,11 @@ private fun ProfileDestination(viewModel: MatchHeroSelectionViewModel) {
 }
 
 @Composable
-private fun PersonalHeroes(stats: List<PersonalHeroStats>, onBack: () -> Unit) {
+private fun PersonalHeroes(
+    stats: List<PersonalHeroStats>,
+    onBack: () -> Unit,
+    onHeroSelected: (String) -> Unit,
+) {
     Column(modifier = Modifier.fillMaxSize()) {
         Button(
             onClick = onBack,
@@ -423,7 +454,7 @@ private fun PersonalHeroes(stats: List<PersonalHeroStats>, onBack: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(stats, key = { it.heroName }) { heroStats ->
-                    PersonalHeroStatsRow(heroStats)
+                    PersonalHeroStatsRow(heroStats, onClick = { onHeroSelected(heroStats.heroName) })
                 }
             }
         }
@@ -431,20 +462,78 @@ private fun PersonalHeroes(stats: List<PersonalHeroStats>, onBack: () -> Unit) {
 }
 
 @Composable
-private fun PersonalHeroStatsRow(stats: PersonalHeroStats) {
+private fun PersonalHeroStatsRow(stats: PersonalHeroStats, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text(stats.heroName, style = MaterialTheme.typography.titleMedium)
+        Button(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+            Text(stats.heroName)
+        }
         Text("Games played: ${stats.gamesPlayed}", style = MaterialTheme.typography.bodyLarge)
         Text("Wins: ${stats.wins}", style = MaterialTheme.typography.bodyLarge)
         Text("Losses: ${stats.losses}", style = MaterialTheme.typography.bodyLarge)
         Text("Win rate: ${stats.winRatePercentage}%", style = MaterialTheme.typography.bodyLarge)
     }
     HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
+}
+
+@Composable
+private fun PersonalHeroTurnOrderDetailScreen(
+    detail: PersonalHeroTurnOrderDetail,
+    onBack: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Button(onClick = onBack) {
+            Text("Back")
+        }
+        Text(detail.heroName, style = MaterialTheme.typography.headlineMedium)
+        PersonalTurnOrderStatsSection(
+            "Overall",
+            detail.overall.gamesPlayed,
+            detail.overall.wins,
+            detail.overall.losses,
+            detail.overall.winRatePercentage,
+        )
+        PersonalTurnOrderStatsSection(
+            "You went first",
+            detail.playerWentFirst.gamesPlayed,
+            detail.playerWentFirst.wins,
+            detail.playerWentFirst.losses,
+            detail.playerWentFirst.winRatePercentage,
+        )
+        PersonalTurnOrderStatsSection(
+            "Opponent went first",
+            detail.opponentWentFirst.gamesPlayed,
+            detail.opponentWentFirst.wins,
+            detail.opponentWentFirst.losses,
+            detail.opponentWentFirst.winRatePercentage,
+        )
+    }
+}
+
+@Composable
+private fun PersonalTurnOrderStatsSection(
+    title: String,
+    gamesPlayed: Int,
+    wins: Int,
+    losses: Int,
+    winRatePercentage: Int,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(title, style = MaterialTheme.typography.titleLarge)
+        Text("Games played: $gamesPlayed", style = MaterialTheme.typography.bodyLarge)
+        Text("Wins: $wins", style = MaterialTheme.typography.bodyLarge)
+        Text("Losses: $losses", style = MaterialTheme.typography.bodyLarge)
+        Text("Win rate: $winRatePercentage%", style = MaterialTheme.typography.bodyLarge)
+    }
 }
 
 @Composable
