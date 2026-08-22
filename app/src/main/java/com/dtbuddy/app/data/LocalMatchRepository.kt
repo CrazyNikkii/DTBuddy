@@ -39,11 +39,25 @@ data class PersonalTurnOrderStats(
     }
 }
 
+data class PersonalHeroMatchupStats(
+    val opponentHeroName: String,
+    val gamesPlayed: Int,
+    val wins: Int,
+    val losses: Int,
+) {
+    val winRatePercentage: Int = if (gamesPlayed == 0) {
+        0
+    } else {
+        (wins.toDouble() / gamesPlayed * 100).roundToInt()
+    }
+}
+
 data class PersonalHeroTurnOrderDetail(
     val heroName: String,
     val overall: PersonalHeroStats,
     val playerWentFirst: PersonalTurnOrderStats,
     val opponentWentFirst: PersonalTurnOrderStats,
+    val matchups: List<PersonalHeroMatchupStats>,
 )
 
 class LocalMatchRepository(
@@ -103,6 +117,18 @@ class LocalMatchRepository(
             opponentWentFirst = heroMatches
                 .filter { it.firstPlayer == "Opponent" }
                 .toPersonalTurnOrderStats(),
+            matchups = heroMatches
+                .groupBy { it.opponentHeroName }
+                .map { (opponentHeroName, matches) ->
+                    val wins = matches.count { it.winner == "Player" }
+                    PersonalHeroMatchupStats(
+                        opponentHeroName = opponentHeroName,
+                        gamesPlayed = matches.size,
+                        wins = wins,
+                        losses = matches.size - wins,
+                    )
+                }
+                .sortedBy { it.opponentHeroName },
         )
     }
 }
